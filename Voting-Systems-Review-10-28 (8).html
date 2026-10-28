@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Voting Systems Review</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Source+Sans+3:wght@400;600;700&display=swap">
+<style>
+/* Layout: black header strip + red rule (matches the class slide decks); one centered column of dotted, sharp-cornered section boxes for students; a wide tabbed console for the teacher. */
+:root{
+  --paper:#ffffff; --ink:#000000; --muted:#4b4b4b; --line:#000000; --soft:#f3f3f1; --strip:#000000; --strip-ink:#ffffff;
+  --red:#c8102e; --ok:#17703a; --okbg:#e5f3ea; --bad:#b3261e; --badbg:#fbe8e6; --warn:#7a5200; --warnbg:#fff2d3; --focus:#1749c9; --bar:#1f1f1f; --barbg:#e4e4e1;
+  --display:"Oswald","Arial Narrow",Arial,sans-serif;
+  --body:"Trebuchet MS","Source Sans 3","Segoe UI",Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#141414; --ink:#f4f4f2; --muted:#b8b8b4; --line:#cfcfcb; --soft:#1f1f1e; --strip:#000000; --strip-ink:#ffffff;
+  --red:#ff4d5e; --ok:#6fd49a; --okbg:#143222; --bad:#ff8a80; --badbg:#3a1714; --warn:#ffcf6b; --warnbg:#3a2c0b; --focus:#8fb0ff; --bar:#e8e8e4; --barbg:#333331; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#141414; --ink:#f4f4f2; --muted:#b8b8b4; --line:#cfcfcb; --soft:#1f1f1e; --strip:#000000; --strip-ink:#ffffff;
+  --red:#ff4d5e; --ok:#6fd49a; --okbg:#143222; --bad:#ff8a80; --badbg:#3a1714; --warn:#ffcf6b; --warnbg:#3a2c0b; --focus:#8fb0ff; --bar:#e8e8e4; --barbg:#333331; color-scheme:dark}
+
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.5}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--strip)}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+h1,h2,h3{font-family:var(--display);font-weight:600;letter-spacing:.01em;text-wrap:balance;margin:0;line-height:1.15}
+.tabnum{font-variant-numeric:tabular-nums}
+
+/* header */
+.strip{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--strip);color:var(--strip-ink);border-bottom:5px solid var(--red)}
+.strip-in{max-width:1280px;margin:0 auto;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.strip h1{font-size:1.45rem;color:var(--strip-ink);text-transform:uppercase}
+.strip .sub{font-size:.85rem;opacity:.85;letter-spacing:.06em;text-transform:uppercase}
+.strip .grow{flex:1;min-width:0}
+.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--strip-ink);padding:3px 10px;font-size:.85rem;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+.clockbtn{background:transparent;color:var(--strip-ink);cursor:pointer}
+.clockbtn.low{background:var(--red);border-color:var(--red)}
+.clockbtn.done{opacity:.8}
+.langbtn{background:transparent;color:var(--strip-ink);cursor:pointer;font-family:var(--body);font-weight:600}
+.langbtn:hover{background:var(--red);border-color:var(--red)}
+.chip.timer{font-family:var(--display);font-size:1.15rem;font-variant-numeric:tabular-nums}
+.chip.timer.low{background:var(--red);border-color:var(--red)}
+
+.wrap{max-width:880px;margin:0 auto;padding-block:22px 80px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:22px}
+.wrap.wide{max-width:1280px}
+
+/* lesson framework */
+.frame{border:2px solid var(--line);display:grid;grid-template-columns:1fr 1fr;}
+.frame>div{padding:12px 14px;min-width:0}
+.frame>div+div{border-left:2px solid var(--line)}
+.frame .lab{font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:.85rem;color:var(--red);font-weight:600}
+.frame ul{margin:4px 0 0;padding-left:20px}
+@media (max-width:640px){.frame{grid-template-columns:1fr}.frame>div+div{border-left:0;border-top:2px solid var(--line)}}
+
+/* sections */
+.sec{border:2.5px dotted var(--line);padding:18px;display:flex;flex-direction:column;gap:16px;scroll-margin-top:90px;position:relative}
+.sec.now{border-style:solid;border-color:var(--red)}
+.sec-h{display:flex;gap:12px;align-items:flex-start}
+.sqnum{flex:none;width:44px;height:44px;border:2.5px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-size:1.4rem;font-weight:700}
+.sec.now .sqnum{background:var(--red);border-color:var(--red);color:#fff}
+.sec-h .t{flex:1;min-width:0}
+.sec-h h2{font-size:1.5rem;text-transform:uppercase}
+.meta{font-size:.82rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.nowtag{display:inline-block;background:var(--red);color:#fff;font-size:.72rem;letter-spacing:.1em;padding:1px 7px;margin-left:8px;vertical-align:middle}
+.locked{display:flex;align-items:center;gap:12px;padding:14px;background:var(--soft);color:var(--muted)}
+.locked svg{flex:none}
+p{margin:0}
+.lead{max-width:65ch}
+
+/* preference schedule */
+.sched-wrap{overflow-x:auto}
+table.sched{border-collapse:collapse;font-variant-numeric:tabular-nums;min-width:320px}
+table.sched th,table.sched td{border:1.5px solid var(--line);padding:6px 12px;text-align:center}
+table.sched th{font-family:var(--display);font-weight:500;text-transform:uppercase;font-size:.82rem;letter-spacing:.05em;background:var(--soft)}
+table.sched td.voters{font-weight:700}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.92rem}
+.legend b{display:inline-grid;place-items:center;width:22px;height:22px;border:1.5px solid var(--line);margin-right:5px;font-size:.85rem}
+.scenario{display:flex;flex-direction:column;gap:10px;padding:14px;background:var(--soft)}
+.scenario h3{font-size:1.1rem;text-transform:uppercase}
+.dz-text{font-weight:600;line-height:2.3;max-width:72ch}
+.slot{display:inline-flex;align-items:center;min-width:150px;min-height:40px;padding:4px 12px;margin:2px 4px;border:2px dashed var(--line);background:var(--paper);vertical-align:middle;cursor:pointer;font-weight:600;text-align:left}
+.slot.empty{color:var(--muted);font-weight:400}
+.slot.over{background:var(--warnbg)}
+.slot.right{border-style:solid;border-color:var(--ok);background:var(--okbg)}
+.slot.wrong{border-style:solid;border-color:var(--bad);background:var(--badbg)}
+.slot:disabled{cursor:default}
+.bank{display:flex;flex-wrap:wrap;gap:8px;padding:12px;border:1.5px solid var(--line);background:var(--soft);margin-top:8px}
+.chip2{border:2px solid var(--line);background:var(--paper);padding:7px 12px;cursor:grab;font-weight:600;text-align:left;max-width:100%}
+.chip2.sel{background:var(--ink);color:var(--paper)}
+.mrow{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:10px;align-items:center}
+@media (max-width:560px){.mrow{grid-template-columns:1fr}}
+.stmt{line-height:2.2;padding:10px 14px;border:1.5px solid var(--line);font-size:1.05rem}
+.seg{border:0;border-bottom:3px solid var(--line);background:var(--soft);padding:2px 6px;font:inherit;font-weight:700;cursor:pointer;color:var(--ink)}
+.seg.sel{background:var(--warnbg);border-bottom-color:var(--warn)}
+.seg.right{background:var(--okbg);border-bottom-color:var(--ok)}
+.seg.wrong{background:var(--badbg);border-bottom-color:var(--bad)}
+.seg:disabled{cursor:default}
+.talk{border:2px dashed var(--line);padding:10px 14px;background:var(--soft)}
+.why{font-size:.92rem;padding:7px 10px;border-left:4px solid var(--line);background:var(--soft);margin-top:6px}
+
+/* items */
+.item{display:flex;gap:12px;align-items:flex-start}
+.qn{flex:none;min-width:44px;height:30px;padding:0 6px;border:2px solid var(--line);display:grid;place-items:center;font-family:var(--display);font-weight:600;font-size:.95rem}
+.item .body{flex:1;min-width:0;display:flex;flex-direction:column;gap:9px}
+.item .prompt{font-weight:600;max-width:68ch}
+.tag{display:inline-block;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;border:1.5px solid var(--line);padding:0 6px;margin-left:6px;vertical-align:2px;font-weight:600}
+.tag.red{border-color:var(--red);color:var(--red)}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--paper);border:1.5px solid var(--line);padding:8px 12px;cursor:pointer;width:100%}
+.opt:hover:not(:disabled){background:var(--soft)}
+.opt .box{flex:none;width:18px;height:18px;border:2px solid var(--line);margin-top:3px}
+.opt.sel .box{background:var(--ink);box-shadow:inset 0 0 0 3px var(--paper)}
+.opt.sel{border-width:2.5px}
+.opt.right{background:var(--okbg);border-color:var(--ok)}
+.opt.wrong{background:var(--badbg);border-color:var(--bad)}
+.opt:disabled{cursor:default}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.fields{display:flex;gap:10px;flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:3px;font-size:.85rem}
+.field span{font-weight:600}
+input.num{width:96px;padding:7px 9px;border:2px solid var(--line);background:var(--paper);font-variant-numeric:tabular-nums;font-size:1.05rem}
+input.num.right{border-color:var(--ok);background:var(--okbg)}
+input.num.wrong{border-color:var(--bad);background:var(--badbg)}
+textarea,input.txt,select{width:100%;padding:9px 10px;border:2px solid var(--line);background:var(--paper)}
+textarea{min-height:96px;resize:vertical}
+.btn{border:2px solid var(--line);background:var(--ink);color:var(--paper);padding:7px 16px;font-family:var(--display);font-weight:500;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;font-size:.95rem}
+.btn:hover:not(:disabled){background:var(--red);border-color:var(--red);color:#fff}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.ghost:hover:not(:disabled){color:#fff}
+.btn.on{background:var(--red);border-color:var(--red);color:#fff}
+.btn:disabled{opacity:.45;cursor:default}
+.btn.sm{padding:3px 10px;font-size:.8rem}
+.fb{font-size:.92rem;padding:7px 10px;border-left:4px solid var(--line)}
+.fb.ok{border-color:var(--ok);background:var(--okbg)}
+.fb.no{border-color:var(--bad);background:var(--badbg)}
+.fb.wait{border-color:var(--warn);background:var(--warnbg)}
+.hint{font-size:.9rem;color:var(--muted)}
+.linkish{background:none;border:0;padding:0;color:var(--ink);text-decoration:underline;cursor:pointer;font-size:.88rem}
+.rubric{font-size:.88rem;border:1.5px solid var(--line);border-collapse:collapse;width:100%}
+.rubric td{border:1.5px solid var(--line);padding:4px 8px;vertical-align:top}
+.rubric td:first-child{width:52px;text-align:center;font-weight:700}
+.tscore{font-size:.88rem;font-weight:600}
+.divider{border-top:2px solid var(--line);padding-top:12px;font-family:var(--display);text-transform:uppercase;letter-spacing:.06em;font-size:.95rem}
+
+/* method reveal cards */
+.methods{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (max-width:640px){.methods{grid-template-columns:1fr}}
+.mcard{border:2px solid var(--line);padding:12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.mcard h3{font-size:1.05rem;text-transform:uppercase}
+.mcard .win{font-family:var(--display);font-size:1.3rem;color:var(--red)}
+.mcard.hide{border-style:dashed;color:var(--muted)}
+.mcard .work{font-size:.9rem;font-variant-numeric:tabular-nums}
+.mini{border-collapse:collapse;font-size:.88rem;font-variant-numeric:tabular-nums}
+.mini td,.mini th{border:1px solid var(--line);padding:2px 8px;text-align:center}
+.mini th{font-weight:600}
+
+/* join */
+.join{border:2.5px dotted var(--line);padding:22px;display:flex;flex-direction:column;gap:14px;max-width:520px}
+.join h2{font-size:1.6rem;text-transform:uppercase}
+.notice{padding:10px 12px;border:2px solid var(--warn);background:var(--warnbg);font-size:.92rem}
+
+/* pause overlay */
+.pause{position:fixed;inset:0;z-index:20;background:var(--strip);color:var(--strip-ink);display:grid;place-items:center;text-align:center;padding:24px}
+.pause h2{font-size:clamp(2.2rem,8vw,4.5rem);text-transform:uppercase;color:#fff}
+.pause p{opacity:.85;margin-top:8px}
+.pause .redline{width:120px;height:6px;background:var(--red);margin:14px auto}
+
+/* submit code */
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:.78rem;word-break:break-all;padding:10px;border:1.5px dashed var(--line);background:var(--soft);user-select:all}
+
+/* teacher console */
+.tabs{display:flex;gap:0;border-bottom:3px solid var(--line);flex-wrap:wrap}
+.tabs button{border:0;background:none;padding:10px 16px;font-family:var(--display);text-transform:uppercase;letter-spacing:.05em;font-size:1rem;cursor:pointer;border-bottom:4px solid transparent;margin-bottom:-3px}
+.tabs button[aria-selected="true"]{border-bottom-color:var(--red);color:var(--red)}
+.console{display:grid;grid-template-columns:330px minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.console{grid-template-columns:1fr}}
+.panel{border:2px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.panel h3{font-size:1.05rem;text-transform:uppercase}
+.secrow{display:grid;grid-template-columns:30px minmax(0,1fr) auto auto;gap:6px;align-items:center;padding:6px 0;border-bottom:1px dotted var(--line)}
+.secrow .n{font-family:var(--display);font-weight:700;font-size:1.1rem}
+.secrow .nm{font-size:.92rem;line-height:1.2}
+.secrow .nm small{display:block;color:var(--muted);font-size:.75rem}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+@media (max-width:640px){.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.stat{border:2px solid var(--line);padding:8px 10px}
+.stat .v{font-family:var(--display);font-size:1.8rem;font-variant-numeric:tabular-nums;line-height:1.1}
+.stat .k{font-size:.75rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.ia{display:flex;flex-direction:column;gap:10px}
+.iarow{display:grid;grid-template-columns:52px minmax(0,1fr) 120px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dotted var(--line)}
+.iarow .p{font-size:.88rem;line-height:1.3}
+.bar{height:16px;background:var(--barbg);position:relative}
+.bar i{position:absolute;inset:0 auto 0 0;background:var(--bar)}
+.bar.first i{background:var(--ok)}
+.pct{font-size:.85rem;font-variant-numeric:tabular-nums}
+.pct.low{color:var(--bad);font-weight:700}
+.dist{display:flex;flex-direction:column;gap:3px;font-size:.8rem;margin-top:4px}
+.dist .d{display:grid;grid-template-columns:minmax(0,1fr) 90px 28px;gap:6px;align-items:center}
+.dist .d.k{font-weight:700}
+.tbl-wrap{overflow-x:auto;border:2px solid var(--line)}
+table.gb{border-collapse:collapse;width:100%;font-size:.9rem;font-variant-numeric:tabular-nums}
+table.gb th,table.gb td{border-bottom:1px solid var(--line);padding:7px 9px;text-align:left;white-space:nowrap}
+table.gb th{font-family:var(--display);font-weight:500;text-transform:uppercase;letter-spacing:.04em;font-size:.8rem;background:var(--soft);position:sticky;top:0}
+table.gb td.c{text-align:center}
+table.gb tr.click{cursor:pointer}
+table.gb tr.click:hover td{background:var(--soft)}
+.pill{display:inline-block;padding:0 7px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;border:1.5px solid currentColor}
+.pill.met{color:var(--ok)} .pill.near{color:var(--warn)} .pill.need{color:var(--bad)}
+.mark{font-weight:700} .mark.ok{color:var(--ok)} .mark.fix{color:var(--warn)} .mark.no{color:var(--bad)}
+.grade{display:flex;flex-direction:column;gap:10px}
+.resp{border:1.5px solid var(--line);padding:10px;display:flex;flex-direction:column;gap:6px}
+.resp .who{font-weight:700}
+.resp .txt{white-space:pre-wrap;max-width:75ch}
+.scorebtns{display:flex;gap:4px;flex-wrap:wrap}
+.drawer{border:2.5px solid var(--red);padding:14px;display:flex;flex-direction:column;gap:10px}
+.empty{padding:22px;text-align:center;color:var(--muted);border:2px dashed var(--line)}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;z-index:30;font-size:.9rem}
+.confirm{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:8px;border:2px solid var(--bad);background:var(--badbg);font-size:.9rem}
+@media (prefers-reduced-motion:no-preference){.sec{transition:border-color .2s}}
+body.secure #app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+body.secure #app input,body.secure #app textarea,body.secure #app .code{-webkit-user-select:text;user-select:text}
+@media print{body.secure #app{display:none!important}body.secure::after{content:"Printing is turned off during this lesson.";display:block;padding:40px;font-size:20px}}
+#secWarn{position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;padding:16px}
+#secWarn .box{background:var(--paper);color:var(--ink);border:3px solid var(--red);max-width:520px;width:100%;padding:22px 24px;display:flex;flex-direction:column;gap:12px}
+#secWarn h2{color:var(--red);text-transform:uppercase;font-size:1.25rem}
+#calcBtn{position:fixed;right:18px;bottom:18px;z-index:40;display:flex;align-items:center;gap:8px;padding:11px 16px;background:var(--ink);color:var(--paper);border:2px solid var(--ink);font-weight:700;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 0 rgba(0,0,0,.25)}
+#calcBtn[aria-expanded="true"]{background:var(--red);border-color:var(--red)}
+#calcBtn svg{width:20px;height:20px}
+#calcPanel{position:fixed;right:18px;bottom:76px;z-index:45;width:min(400px,calc(100vw - 32px));height:min(540px,calc(100vh - 110px));background:var(--paper);border:3px solid var(--ink);display:flex;flex-direction:column;box-shadow:0 8px 28px rgba(0,0,0,.28)}
+#calcPanel .bar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--ink);color:var(--paper);cursor:move;user-select:none;touch-action:none}
+#calcPanel .bar b{font-size:.85rem;letter-spacing:.08em;text-transform:uppercase}
+#calcPanel .bar button{background:transparent;border:1.5px solid var(--paper);color:var(--paper);width:30px;height:30px;font-size:1rem;line-height:1;cursor:pointer}
+#calcPanel .host{flex:1;min-height:0;position:relative}
+#calcPanel .msg{padding:16px;color:var(--muted)}
+@media (max-width:560px){#calcPanel{left:16px;right:16px;width:auto;bottom:72px;height:min(480px,calc(100vh - 100px))}}
+@media print{#calcBtn,#calcPanel{display:none!important}}
+</style>
+</head>
+<body>
+
+
+<header class="strip"><div class="strip-in">
+  <div class="grow">
+    <div class="sub" id="hdrSub">Discrete Mathematics · DM.DPSR.1.1 · Review · 51 min</div>
+    <h1 id="hdrTitle">Voting Systems Review</h1>
+  </div>
+  <button class="chip langbtn" id="hdrLang" type="button" hidden></button>
+  <span class="chip" id="hdrWho" hidden></span>
+  <span class="chip timer" id="hdrTimer" hidden></span>
+  <button class="chip timer clockbtn" id="hdrClock" type="button" hidden></button>
+</div></header>
+
+<main id="app" class="wrap"></main>
+<div id="pause" class="pause" hidden><div><h2 id="pauseH">Eyes up front</h2><div class="redline"></div><p id="pauseP">Hands off the keyboard. Your work is saved.</p></div></div>
+<div id="toast" class="toast" hidden></div>
+
+<script>
+/* ============================== DATA ============================== */
+const E = {"t1": {"title": "Table 1: Homecoming Themes", "story": "33 students ranked three homecoming themes. Use Table 1 for Questions 13–18 and 22–24.", "hideTotal": true, "cands": {"A": "Arcade Night", "B": "Beach Party", "C": "Carnival"}, "groups": [[12, "ABC"], [10, "BCA"], [7, "CBA"], [4, "CAB"]]}, "t1r": {"title": "Table 1 (repeated)", "story": "", "hideTotal": true, "cands": {"A": "Arcade Night", "B": "Beach Party", "C": "Carnival"}, "groups": [[12, "ABC"], [10, "BCA"], [7, "CBA"], [4, "CAB"]]}, "t3": {"title": "Table 3: End-of-Year Events", "story": "40 club members ranked four end-of-year events. Use Table 3 for Questions 31, 32 and 35.", "hideTotal": true, "cands": {"P": "Pizza Party", "Q": "Quiz Bowl", "R": "Rock Climbing", "S": "Scavenger Hunt"}, "groups": [[15, "PQRS"], [11, "QSRP"], [9, "RQSP"], [5, "SRQP"]]}, "t3r": {"title": "Table 3 (repeated)", "story": "", "hideTotal": true, "cands": {"P": "Pizza Party", "Q": "Quiz Bowl", "R": "Rock Climbing", "S": "Scavenger Hunt"}, "groups": [[15, "PQRS"], [11, "QSRP"], [9, "RQSP"], [5, "SRQP"]]}};
+const ORD=["1st","2nd","3rd","4th","5th"];
+const tot=e=>e.groups.reduce((s,g)=>s+g[0],0);
+const firsts=(e,act)=>{const o={};act.forEach(x=>o[x]=0);e.groups.forEach(([n,r])=>{o[[...r].find(x=>act.includes(x))]+=n});return o};
+const bordaOf=e=>{const c=Object.keys(e.cands),o={};c.forEach(x=>o[x]=0);e.groups.forEach(([n,r])=>[...r].forEach((x,i)=>o[x]+=n*(c.length-i)));return o};
+const irvOf=e=>{let a=Object.keys(e.cands);const T=tot(e),rounds=[],out=[];for(;;){const f=firsts(e,a);rounds.push(f);const best=a.reduce((p,q)=>f[p]>=f[q]?p:q);if(f[best]>T/2)return{rounds,out,winner:best};const w=a.reduce((p,q)=>f[p]<=f[q]?p:q);out.push(w);a=a.filter(x=>x!==w)}};
+const runoffOf=e=>{const c=Object.keys(e.cands),f=firsts(e,c);const top=[...c].sort((p,q)=>f[q]-f[p]).slice(0,2);const h=firsts(e,top);return{top,h,winner:h[top[0]]>=h[top[1]]?top[0]:top[1]}};
+const plurOf=e=>{const f=firsts(e,Object.keys(e.cands));return{f,winner:Object.keys(f).reduce((p,q)=>f[p]>=f[q]?p:q)}};
+
+/* Item types: num, set (several numbers), choice, text (teacher-scored), poll (no key), rate (self-rating).
+   mode "check" = instant feedback + retries; mode "submit" = one answer, results when the teacher reveals. */
+const SECTIONS = [{"n": 0, "badge": "W", "key": "warm", "title": "Warm-Up", "clock": "0:00–5:00", "min": 5, "mode": "check", "intro": "5 quick questions: True/False and drag & drop. Answer on your own; you get 2 attempts per question, and your first try is recorded.", "blocks": [{"it": {"id": "w1", "code": "W1", "type": "choice", "prompt": "True or False: in a 3-candidate election with 40 voters, a candidate with 20 first-place votes has a majority.", "opts": ["True", "False"], "key": 1, "why": "A majority of 40 must be more than half (20), so it takes 21 votes. 20 is exactly half."}}, {"it": {"id": "w2", "code": "W2", "type": "choice", "prompt": "True or False: a candidate can win by plurality even if more than half of the voters ranked that candidate last.", "opts": ["True", "False"], "key": 0, "why": "Plurality counts only first choices. Example: 15 of 40 voters rank P first and the other 25 rank P last; P can still have the most first-place votes."}}, {"it": {"id": "w3", "code": "W3", "type": "drag", "prompt": "Complete the sentence.", "text": "In approval voting, the approval totals can add up to ___ the number of voters, because each voter may approve ___.", "chips": ["more than", "exactly half of", "only one candidate", "more than one candidate", "no candidates"], "key": "0.3", "why": "Each voter can approve several candidates, so one voter can add to more than one total."}}, {"it": {"id": "w4", "code": "W4", "type": "drag", "prompt": "Match each term to its meaning.", "rows": ["Majority", "Plurality", "Borda count", "Sequential runoff"], "chips": ["Points for every place on the ballot", "More than half of the votes", "Drop the last-place candidate and recount until someone has more than half", "The most first-place votes, even if not more than half"], "key": "1.3.0.2", "why": "Majority = more than half; plurality = the most; Borda = points for every ranking; sequential runoff = eliminate and recount."}}, {"it": {"id": "w5", "code": "W5", "type": "choice", "prompt": "True or False: with 4 candidates, each Borda ballot (4-3-2-1) gives out 10 points, so 30 voters give out 300 points in all.", "opts": ["True", "False"], "key": 0, "why": "4 + 3 + 2 + 1 = 10 points per ballot; 30 × 10 = 300. This is a quick check for any Borda count."}}]}, {"n": 1, "key": "s1", "title": "Section 1 · Recall & Reproduction", "clock": "5:00–15:00", "min": 10, "mode": "check", "intro": "DOK 1 · Questions 1–12. Answer on your own first; you get 2 attempts per question. Then compare with a partner and explain why each of the other choices is wrong.", "blocks": [{"it": {"id": "q1", "code": "1", "type": "drag", "prompt": "Complete the sentence.", "chips": ["preference ballot", "approval ballot", "plurality ballot", "runoff ballot"], "key": "0", "why": "Ranked ballots are preference ballots.", "text": "A ballot on which each voter lists the candidates in order of preference is called a ___."}}, {"it": {"id": "q2", "code": "2", "type": "choice", "prompt": "Which statement describes a plurality?", "opts": ["More than half of all the votes", "Exactly half of the votes", "The most votes, even if it is not more than half", "Every vote in the election"], "key": 2, "why": "Plurality = most votes; it may be under half."}}, {"it": {"id": "q3", "code": "3", "type": "choice", "prompt": "An election has 50 voters. What is the fewest votes a candidate needs for a majority?", "opts": ["26", "25", "25.5", "27"], "key": 0, "why": "Half of 50 is 25; more than half is 26."}}, {"it": {"id": "q4", "code": "4", "type": "choice", "prompt": "A club has 75 voting members, and all of them vote. What is the majority threshold?", "opts": ["37", "38", "37.5", "39"], "key": 1, "why": "Half of 75 is 37.5; the next whole number is 38."}}, {"it": {"id": "q5", "code": "5", "type": "choice", "prompt": "In a top-two runoff, which candidates advance to the final round?", "opts": ["The two candidates with the fewest last-place votes", "The two candidates with the highest Borda totals", "Every candidate who earned at least one vote", "The two candidates with the most first-place votes"], "key": 3, "why": "Only the top two by first-place votes advance."}}, {"talk": "Give a partner a 3-candidate example where someone wins a plurality but not a majority."}, {"it": {"id": "q6", "code": "6", "type": "choice", "prompt": "In a Borda count with 3 candidates (3-2-1), how many points does a last-place ranking earn?", "opts": ["0", "2", "1", "3"], "key": 2, "why": "3 candidates: 1st = 3, 2nd = 2, 3rd = 1."}}, {"it": {"id": "q7", "code": "7", "type": "choice", "prompt": "In approval voting, may one voter approve more than one candidate?", "opts": ["Yes — a voter may approve every candidate they find acceptable", "No — each voter approves exactly one candidate", "Only if the voter also ranks the candidates", "Only in the final round of a runoff"], "key": 0, "why": "Approval ballots allow several approvals."}}, {"it": {"id": "q8", "code": "8", "type": "choice", "prompt": "When does a sequential runoff stop?", "opts": ["After exactly two rounds", "When one candidate has a plurality", "When the last-place candidate has zero votes", "When one candidate has a majority of the remaining votes"], "key": 3, "why": "Keep eliminating until someone has more than half."}}, {"it": {"id": "q9", "code": "9", "type": "drag", "prompt": "Complete the sentence.", "chips": ["which candidate came in second place overall", "which candidate each group of voters ranked second", "how many voters chose each candidate second", "the runner-up in the top-two runoff"], "key": "1", "why": "Read down each column; the 2nd row is that group’s 2nd choice.", "text": "In a preference schedule, the row labeled “2nd choice” shows ___."}}, {"it": {"id": "q10", "code": "10", "type": "choice", "prompt": "In a 3-candidate Borda count (3-2-1) with 20 voters, what must all the candidates’ totals add up to?", "opts": ["120", "60", "20", "80"], "key": 0, "why": "Each ballot gives 3 + 2 + 1 = 6 points; 20 × 6 = 120."}}, {"talk": "Sort the methods: which use only first choices, which use every ranking, and which use no ranking at all?"}, {"it": {"id": "q11", "code": "11", "type": "drag", "prompt": "Complete the sentence.", "chips": ["exactly half of the votes", "a plurality", "the most last-place votes", "the lowest Borda total"], "key": "1", "why": "More than half beats everyone else combined, so it is also the most.", "text": "A candidate who wins a majority of the votes must also have ___."}}, {"it": {"id": "q12", "code": "12", "type": "drag", "prompt": "Which of these methods does not use ranked ballots? Sort each method.", "chips": ["Uses ranked ballots", "Does not use ranked ballots"], "key": "0.0.0.1", "why": "Approval voting uses yes/no approvals, not rankings.", "rows": ["Borda count", "Sequential runoff", "Top-two runoff", "Approval voting"]}}]}, {"n": 2, "key": "s2", "title": "Section 2 · Skills & Concepts", "clock": "15:00–26:00", "min": 11, "mode": "check", "intro": "DOK 2 · Questions 13–21. Use the table shown above each question. 2 attempts per question.", "blocks": [{"sched": "t1"}, {"it": {"id": "q13", "code": "13", "type": "drag", "prompt": "Using Table 1, how many students voted in all?", "chips": ["33", "4", "29", "12"], "key": "0", "why": "12 + 10 + 7 + 4 = 33.", "rows": ["Students who voted in all"]}}, {"it": {"id": "q14", "code": "14", "type": "drag", "prompt": "Using Table 1, how many first-place votes does Carnival (C) have?", "chips": ["7", "4", "17", "11"], "key": "3", "why": "C is 1st in the 7 and 4 columns: 7 + 4 = 11.", "rows": ["Carnival’s first-place votes"]}}, {"it": {"id": "q15", "code": "15", "type": "choice", "prompt": "Using Table 1, which statement correctly describes the plurality result?", "opts": ["Arcade Night wins with 12 of 33 (36.4%), but has no majority", "Arcade Night wins with a majority of 12 votes", "Carnival wins because it appears first in two columns", "Beach Party wins because it is 2nd in two columns"], "key": 0, "why": "1st place: A 12, C 11, B 10. A majority of 33 is 17; 12 < 17."}}, {"talk": "Before counting, predict the winner of Table 1. Did the counting rule change your prediction?"}, {"sched": "t1r"}, {"it": {"id": "q16", "code": "16", "type": "choice", "prompt": "Using Table 1, Arcade Night and Carnival advance to a top-two runoff. What is the result?", "opts": ["Arcade Night wins, 12 to 11", "Arcade Night wins, 22 to 11", "Carnival wins, 21 to 12", "Carnival wins, 17 to 16"], "key": 2, "why": "The 10 Beach Party ballots rank C above A: C = 11 + 10 = 21, A = 12."}}, {"it": {"id": "q17", "code": "17", "type": "choice", "prompt": "Using Table 1, how many students ranked Arcade Night last, and what percent is that?", "opts": ["17 students, about 51.5%", "12 students, about 36.4%", "10 students, about 30.3%", "21 students, about 63.6%"], "key": 0, "why": "A is 3rd in the 10 and 7 columns: 17; 17 ÷ 33 ≈ 51.5%."}}, {"it": {"id": "q18", "code": "18", "type": "choice", "prompt": "Using Table 1 and a Borda count (3-2-1), what is Beach Party’s total?", "opts": ["61", "65", "30", "72"], "key": 3, "why": "B: 10(3) + 12(2) + 7(2) + 4(1) = 30 + 24 + 14 + 4 = 72. (A 61, C 65; the sum 198 = 33 × 6.)"}}, {"table": {"title": "Table 2: 36 approval ballots", "note": "A ✓ means that group approves the candidate.", "head": ["Number of voters", "12", "10", "8", "6"], "rows": [["X", "✓", "—", "—", "✓"], ["Y", "✓", "—", "✓", "—"], ["Z", "—", "✓", "✓", "—"]]}}, {"it": {"id": "q19", "code": "19", "type": "choice", "prompt": "Using Table 2, who wins by approval voting, and what percent of voters approve that candidate?", "opts": ["X, with 18 approvals (50%)", "Y, with 20 approvals (about 55.6%)", "Z, with 18 approvals (50%)", "Y, with 2 approvals (about 5.6%)"], "key": 1, "why": "X = 12 + 6 = 18; Y = 12 + 8 = 20; Z = 10 + 8 = 18. 20 ÷ 36 ≈ 55.6%."}}, {"it": {"id": "q20", "code": "20", "type": "choice", "prompt": "In a 50-voter sequential runoff, Round 1 is A 18, B 14, C 11, D 7. D is eliminated: 6 of D’s voters rank B next and 1 ranks C next. What happens?", "opts": ["A 25, B 14, C 11; A wins with a majority", "A 18, B 20, C 12; B wins because B has the most votes", "A 18, B 20, C 12; no majority yet, so C is eliminated next", "A 18, B 14, C 18; B is eliminated next"], "key": 2, "why": "B = 14 + 6 = 20, C = 11 + 1 = 12. A majority of 50 is 26; no one has it, so drop C."}}, {"talk": "In Table 2, why do the approval totals add up to more than the 36 voters?"}, {"it": {"id": "q21", "code": "21", "type": "fix", "prompt": "In a 60-voter election, a candidate receives 27 first-place votes. Which statement is true? Match & Fix: the statement below has one error. Click the error, then drag in the fix.", "parts": [[0, "27 is "], [1, "45%"], [0, " of the votes, so the candidate "], [1, "has"], [0, " a majority."]], "chips": ["does not have", "55%", "27%", "has more than"], "key": "1.0", "why": "27 ÷ 60 = 45%; a majority of 60 needs 31."}}]}, {"n": 3, "key": "s3", "title": "Section 3 · Strategic Thinking", "clock": "26:00–39:00", "min": 13, "mode": "check", "intro": "DOK 3 · Questions 22–31. Explain your reasoning to a partner after each question. 2 attempts per question.", "blocks": [{"sched": "t1r"}, {"it": {"id": "q22", "code": "22", "type": "choice", "prompt": "In Table 1, Beach Party has the fewest first-place votes but wins the Borda count. Which fact best explains this?", "opts": ["Borda gives bonus points to the candidate with the fewest first-place votes", "Beach Party has a majority of first-place votes", "29 of 33 rank Beach Party 1st or 2nd, so it earns points on almost every ballot", "The Borda count only counts second-place votes"], "key": 2, "why": "B is 1st or 2nd in the 12, 10 and 7 columns: 29 voters, which is broad support."}}, {"it": {"id": "q23", "code": "23", "type": "fix", "prompt": "Kim says, “In Table 1, Carnival has 7 first-place votes because the Carnival column says 7.” Which response best evaluates Kim’s reasoning? Match & Fix: click the error in Kim’s statement, then drag in the fix.", "parts": [[0, "In Table 1, "], [1, "Carnival"], [0, " has "], [1, "7"], [0, " first-place votes because the Carnival column says 7."]], "chips": ["11 (7 + 4)", "17", "4", "Beach Party"], "key": "1.0", "why": "Add every column where the candidate is ranked 1st: Carnival is 1st in the 7 and 4 columns, so 7 + 4 = 11."}}, {"it": {"id": "q24", "code": "24", "type": "choice", "prompt": "In Table 1, suppose the 10 Beach Party voters change only their lower choices to B > A > C. All other ballots stay the same. Who wins the top-two runoff now?", "opts": ["Carnival still wins, 21 to 12", "Carnival wins, 22 to 11", "Arcade Night wins, 22 to 11", "Beach Party wins, because its voters changed"], "key": 2, "why": "The top two are still A and C. The 10 ballots now rank A above C: A = 12 + 10 = 22, C = 11."}}, {"it": {"id": "q25", "code": "25", "type": "choice", "prompt": "A 30-voter approval election: 10 voters approve J and K · 9 approve K only · 7 approve J and L · 4 approve L only. K is currently the winner. The 10-voter group’s favorite is J, so they approve only J (bullet voting). All other ballots stay the same. What happens?", "opts": ["K still wins with 19 approvals", "J wins with 17 approvals, and K drops to 9", "J wins with 27 approvals", "J and K tie with 17 approvals each"], "key": 1, "why": "Before: J 17, K 19, L 11. After: J 17, K 9, L 11, so J wins."}}, {"talk": "Q23: what is the easiest mistake to make when reading a schedule, and how do you avoid it?"}, {"it": {"id": "q26", "code": "26", "type": "choice", "prompt": "In an 80-voter approval election, the totals are E 44, F 41, and G 30 (115 approvals in all). Which conclusion is best supported?", "opts": ["Only E has a majority, because only one candidate can have more than half", "No one has a majority, because 44 ÷ 115 is less than 50%", "The results are invalid because 115 is more than 80", "Both E and F were approved by a majority of voters (55% and about 51.3%)"], "key": 3, "why": "Use the number of voters: 44 ÷ 80 = 55%, 41 ÷ 80 ≈ 51.3%."}}, {"it": {"id": "q27", "code": "27", "type": "choice", "prompt": "A headline reads: “Patel wins with majority support.” The results were Patel 515, Nguyen 300, Ortiz 185. Is the headline supported?", "opts": ["No: Patel needs 1,000 votes for a majority", "No: Nguyen and Ortiz together have 485, so it is a tie", "Yes: Patel has 515 of 1,000 votes (51.5%), and a majority needs 501", "Yes: Patel has the most votes, and the most votes is always a majority"], "key": 2, "why": "Total 1,000; majority 501; 515 > 501."}}, {"it": {"id": "q28", "code": "28", "type": "choice", "prompt": "In a 40-voter election, which set of first-place totals shows X winning by plurality while a runoff is still needed for a majority winner?", "opts": ["X = 18, Y = 15, Z = 7", "X = 21, Y = 12, Z = 7", "X = 15, Y = 18, Z = 7", "X = 20, Y = 20, Z = 0"], "key": 0, "why": "A majority of 40 is 21. 18 is the most but less than 21. (21 is a majority; Y leads in the third set; the last is a tie.)"}}, {"it": {"id": "q29", "code": "29", "type": "fix", "prompt": "Which statement about a candidate who has a majority of first-place votes is true? Match & Fix: the statement below is false. Click the error, then drag in the fix that makes it true.", "parts": [[1, "Every method, including Borda,"], [0, " will "], [1, "always"], [0, " elect that candidate."]], "chips": ["Plurality, top-two runoff, and sequential runoff", "Only Borda", "No method", "Only plurality"], "key": "0.0", "why": "A majority of 1st-place votes wins plurality and Round 1 of both runoffs; Borda can still choose someone else."}}, {"it": {"id": "q30", "code": "30", "type": "choice", "prompt": "A 30-voter approval election also asked for one favorite. H: 14 approvals, 12 favorites · I: 25 approvals, 8 favorites · J: 17 approvals, 10 favorites. Which conclusion is best supported?", "opts": ["H should win because H has the most favorites and approvals combined", "I wins by approval with 25 of 30 (about 83.3%), even though I has the fewest favorites", "J wins because J is in the middle on both counts", "No one wins because the favorites add up to 30"], "key": 1, "why": "Approval counts acceptability: I = 25 of 30 ≈ 83.3%."}}, {"talk": "Q29: which methods always respect a majority winner? Why might Borda not?"}, {"sched": "t3"}, {"it": {"id": "q31", "code": "31", "type": "choice", "prompt": "In Table 3, Pizza Party has the most first-place votes. Which fact best shows it is a weak choice?", "opts": ["Pizza Party has 15 first-place votes", "Quiz Bowl has 11 first-place votes", "Scavenger Hunt has only 5 first-place votes", "25 of 40 members (62.5%) rank Pizza Party last"], "key": 3, "why": "P is 4th in the 11, 9 and 5 columns: 25 of 40 = 62.5%, so a majority ranked it last."}}]}, {"n": 4, "key": "s4", "title": "Section 4 · Extended Thinking", "clock": "39:00–51:00", "min": 12, "mode": "check", "intro": "DOK 4 · Questions 32–35. Multi-step: complete every count before choosing. 2 attempts per question.", "blocks": [{"sched": "t3r"}, {"it": {"id": "q32", "code": "32", "type": "drag", "prompt": "Use Table 3. Find the winner by plurality, top-two runoff, sequential runoff, and Borda (4-3-2-1). Match each method to its winner.", "chips": ["P · Pizza Party", "Q · Quiz Bowl", "R · Rock Climbing", "S · Scavenger Hunt"], "key": "0.1.2.1", "why": "Plurality P 15. Runoff P vs Q: Q 25 to 15. Sequential: drop S → P 15, R 14, Q 11; drop Q → R 25 to 15. Borda: P 85, Q 126, R 103, S 86.", "rows": ["Plurality", "Top-two runoff", "Sequential runoff", "Borda (4-3-2-1)"]}}, {"it": {"id": "q33", "code": "33", "type": "choice", "prompt": "Design check: 25 voters, candidates A, B, C, three voter groups, and the plurality winner loses the top-two runoff. Which schedule works?", "opts": ["13: A>B>C · 8: B>C>A · 4: C>B>A — A has a majority, so A wins", "10: A>B>C · 8: B>C>A · 7: C>A>B — C’s voters go to A; A wins 17 to 8", "10: A>B>C · 8: B>C>A · 7: C>B>A — C’s 7 voters go to B; B beats A 15 to 10", "12: A>B>C · 13: B>A>C — B wins with a majority"], "key": 2, "why": "A 10, B 8, C 7; runoff A vs B: B = 8 + 7 = 15 > A 10. The others: A has a majority; A wins the runoff; only two groups (and B wins plurality)."}}, {"table": {"title": "Table 2 (repeated)", "note": "A ✓ means that group approves the candidate.", "head": ["Number of voters", "12", "10", "8", "6"], "rows": [["X", "✓", "—", "—", "✓"], ["Y", "✓", "—", "✓", "—"], ["Z", "—", "✓", "✓", "—"]]}}, {"it": {"id": "q34", "code": "34", "type": "choice", "prompt": "In Table 2, which single change would make X the clear winner?", "opts": ["The 10 Z-only voters also approve X", "The 6 X-only voters also approve Z", "The 12-voter group approves only X", "The 8-voter group approves only Z"], "key": 0, "why": "If the Z voters add X: X = 28, Y = 20, Z = 18. The others: Z wins with 24; X and Z tie 18 to 18; X and Z tie 18 to 18."}}, {"it": {"id": "q35", "code": "35", "type": "choice", "prompt": "The club in Table 3 wants a method that rewards broad support. Which recommendation is best supported by the data?", "opts": ["Plurality → Pizza Party: it has the most first-place votes (15)", "Sequential runoff → Rock Climbing: it was never eliminated", "Borda count → Quiz Bowl: 35 of 40 rank it 1st or 2nd, and it has the top total, 126", "Borda count → Rock Climbing: it has the top total, 126"], "key": 2, "why": "Q is 1st or 2nd in the 15, 11 and 9 columns: 35 voters. Borda totals: Q 126 > R 103."}}, {"talk": "Q35: would your group choose the same method? Name one weakness of the method you pick."}]}];
+const AUTO_TYPES=["num","set","choice","drag","fix"];
+const ITEMS=[];SECTIONS.forEach(s=>s.blocks.forEach(b=>{if(b.it){b.it.sec=s.n;b.it.mode=s.mode;ITEMS.push(b.it)}}));
+const ITEM=Object.fromEntries(ITEMS.map(i=>[i.id,i]));
+const AUTO=ITEMS.filter(i=>AUTO_TYPES.includes(i.type));
+const TEXT=ITEMS.filter(i=>i.type==="text");
+const RATE_OPTS=[["met","Met"],["near","Near Mastery"],["need","Need More"]];
+/* ---------- language ---------- */
+const ES={"School email": "Correo escolar", "Use your school email that ends with @edu.lexington4.net.": "Usa tu correo escolar que termina en @edu.lexington4.net.", "Teacher code": "Código del maestro", "That code is not valid.": "Ese código no es válido.", "You already started this attempt.": "Ya empezaste este intento.", "Time is up": "Se acabó el tiempo", "Lesson submitted": "Lección entregada", "This lesson is closed": "Esta lección está cerrada", "Teacher reopen code": "Código para reabrir (del maestro)", "Reopen": "Reabrir", "That reopen code is not valid.": "Ese código para reabrir no es válido.", "Submitted": "Entregado", "Time left": "Tiempo", "10 minutes left.": "Quedan 10 minutos.", "5 minutes left. Finish up and get your code.": "Quedan 5 minutos. Termina y obtén tu código.", "That extended-time code is not valid.": "Ese código de tiempo extendido no es válido.", "Extended time code": "Código de tiempo extendido", "Apply": "Aplicar", "Close": "Cerrar", "Extended time code (only if your teacher gave you one)": "Código de tiempo extendido (solo si tu maestro te dio uno)", "Time is up. Your answers are locked. Copy your code at the end of Section 4 and paste it in Google Classroom. ": "Se acabó el tiempo. Tus respuestas están bloqueadas. Copia tu código al final de la Sección 4 y pégalo en Google Classroom. ", "Warm-Up": "Calentamiento", "Work alone. You get 2 attempts per question, and your first try is recorded.": "Trabaja solo. Tienes 2 intentos por pregunta y se registra tu primer intento.", "Lesson Focus: Same Ballots, Four Winners": "Enfoque de la lección: mismas boletas, cuatro ganadores", "Follow along as we count the same ballots four different ways. Answer when your teacher asks.": "Sigue la explicación mientras contamos las mismas boletas de cuatro maneras distintas. Responde cuando tu maestro lo indique.", "Guided Practice": "Práctica guiada", "We work this one together, one step at a time. Check each step before moving on.": "Resolvemos este juntos, paso a paso. Revisa cada paso antes de continuar.", "Collaborative Practice": "Práctica colaborativa", "Work with your partner. Split the methods, then check each other's counts. Each partner enters answers on their own Chromebook.": "Trabaja con tu compañero. Divídanse los métodos y luego revisen los conteos del otro. Cada uno escribe sus respuestas en su propia Chromebook.", "Independent Practice": "Práctica independiente", "Work alone. You get one answer per question. Results appear when your teacher releases them.": "Trabaja solo. Tienes una sola respuesta por pregunta. Los resultados aparecen cuando tu maestro los publique.", "Reflection & Exit Ticket": "Reflexión y boleto de salida", "Rate yourself honestly, then complete the exit ticket alone.": "Evalúate con honestidad y luego completa el boleto de salida solo.", "Top-two runoff": "Segunda vuelta entre los dos primeros", "Preference voting (Borda count: 3, 2, 1 points)": "Votación preferencial (conteo de Borda: 3, 2, 1 puntos)", "Checkpoint": "Punto de control", "Error analysis": "Análisis de errores", "Exit ticket": "Boleto de salida", "Use Election P for 5.4 and 5.5.": "Usa la Elección P para 5.4 y 5.5.", "Senior Trip Destination": "Destino del viaje de último año", "37 seniors on the trip committee ranked four destinations.": "37 estudiantes de último año del comité del viaje ordenaron cuatro destinos.", "New School Mascot": "Nueva mascota escolar", "24 student-council members ranked three mascots.": "24 miembros del consejo estudiantil ordenaron tres mascotas.", "Prom Theme": "Tema del baile de graduación", "32 prom-committee members ranked four themes.": "32 miembros del comité del baile ordenaron cuatro temas.", "Election P": "Elección P", "Robotics Club President": "Presidente del club de robótica", "19 club members ranked three candidates.": "19 miembros del club ordenaron tres candidatos.", "Atlanta Aquarium": "Acuario de Atlanta", "Beach (Myrtle Beach)": "Playa (Myrtle Beach)", "D.C. Tour": "Excursión a D.C.", "Hawks": "Hawks (Halcones)", "Lions": "Lions (Leones)", "Wolves": "Wolves (Lobos)", "Galaxy": "Galaxy (Galaxia)", "Masquerade": "Masquerade (Mascarada)", "Neon Nights": "Neon Nights (Noches de neón)", "Old Hollywood": "Old Hollywood (Viejo Hollywood)", "An election has 41 voters. How many votes does a candidate need to win a majority?": "Una elección tiene 41 votantes. ¿Cuántos votos necesita un candidato para ganar por mayoría absoluta?", "Majority means more than half. Half of 41 is 20.5.": "Mayoría absoluta significa más de la mitad. La mitad de 41 es 20.5.", "Which candidate wins under the plurality method?": "¿Qué candidato gana con el método de pluralidad?", "The candidate with more than half of the votes": "El candidato con más de la mitad de los votos", "The candidate with the most first-place votes": "El candidato con más votos de primer lugar", "The candidate with the fewest last-place votes": "El candidato con menos votos de último lugar", "The candidate who wins every head-to-head matchup": "El candidato que gana todos los enfrentamientos uno contra uno", "Plurality only looks at one row of the ballots.": "La pluralidad solo mira una fila de las boletas.", "First-place votes: A = 9, B = 7, C = 6. Which statement is true?": "Votos de primer lugar: A = 9, B = 7, C = 6. ¿Qué afirmación es verdadera?", "A wins by plurality and has a majority": "A gana por pluralidad y tiene mayoría absoluta", "A wins by plurality but does not have a majority": "A gana por pluralidad, pero no tiene mayoría absoluta", "No one wins by plurality": "Nadie gana por pluralidad", "B wins because B and C together beat A": "B gana porque B y C juntos superan a A", "Add the votes first. How many make a majority of that total?": "Primero suma los votos. ¿Cuántos forman una mayoría absoluta de ese total?", "One ballot ranks B > A > C. In a Borda count (3 points for 1st, 2 for 2nd, 1 for 3rd), how many points does this ballot give A?": "Una boleta ordena B > A > C. En un conteo de Borda (3 puntos por el 1.º, 2 por el 2.º, 1 por el 3.º), ¿cuántos puntos le da esta boleta a A?", "Find A's place on this one ballot.": "Encuentra el lugar de A en esta boleta.", "Before we count: which destination do you predict will win?": "Antes de contar: ¿qué destino crees que ganará?", "Atlanta Aquarium (A)": "Acuario de Atlanta (A)", "Beach (B)": "Playa (B)", "D.C. Tour (D)": "Excursión a D.C. (D)", "How many first-place votes does Carowinds (C) have?": "¿Cuántos votos de primer lugar tiene Carowinds (C)?", "C is ranked first in more than one column.": "C aparece en primer lugar en más de una columna.", "In the top-two runoff, Carowinds beats the Aquarium 23 to 14. Where do Carowinds' 23 votes come from?": "En la segunda vuelta entre los dos primeros, Carowinds le gana al Acuario 23 a 14. ¿De dónde salen los 23 votos de Carowinds?", "Only the 11 voters who ranked Carowinds first": "Solo de los 11 votantes que pusieron a Carowinds en primer lugar", "Every voter who did not rank the Aquarium first ranked Carowinds above the Aquarium": "Todos los votantes que no pusieron al Acuario en primer lugar ubicaron a Carowinds por encima del Acuario", "Aquarium voters who switched their ballots": "De votantes del Acuario que cambiaron sus boletas", "Borda points that Carowinds earned in second place": "De puntos de Borda que Carowinds ganó en segundo lugar", "No ballot changed, yet four methods produced four different winners. What does this show?": "Ninguna boleta cambió, pero cuatro métodos dieron cuatro ganadores distintos. ¿Qué demuestra esto?", "Someone made a counting error": "Alguien cometió un error al contar", "The voting method can decide the winner": "El método de votación puede decidir quién gana", "Only plurality is a real voting method": "Solo la pluralidad es un método de votación real", "The election needed more voters": "La elección necesitaba más votantes", "In one or two sentences: which destination should the committee choose, and which number from the schedule supports your choice?": "En una o dos oraciones: ¿qué destino debería elegir el comité y qué número de la tabla apoya tu elección?", "Names a destination and cites a correct number from the schedule or a count": "Nombra un destino y cita un número correcto de la tabla o de un conteo", "Names a destination with a reason but no correct number": "Nombra un destino con una razón, pero sin un número correcto", "No clear choice or reason": "No hay una elección o razón clara", "How many voters are there in total?": "¿Cuántos votantes hay en total?", "Add the top row.": "Suma la fila de arriba.", "How many votes are needed for a majority?": "¿Cuántos votos se necesitan para una mayoría absoluta?", "Count the first-place votes for each mascot.": "Cuenta los votos de primer lugar de cada mascota.", "Who wins by plurality?": "¿Quién gana por pluralidad?", "Hawks, with a majority": "Hawks (Halcones), con mayoría absoluta", "Hawks, without a majority": "Hawks (Halcones), sin mayoría absoluta", "Which mascot is dropped before the runoff?": "¿Qué mascota se elimina antes de la segunda vuelta?", "Move each Lions ballot to its next choice. Find the runoff totals.": "Pasa cada boleta de Lions a su siguiente opción. Encuentra los totales de la segunda vuelta.", "The 5 voters ranked L, W, H. The 2 voters ranked L, H, W.": "Los 5 votantes ordenaron L, W, H. Los 2 votantes ordenaron L, H, W.", "Who wins the top-two runoff?": "¿Quién gana la segunda vuelta entre los dos primeros?", "Find each mascot's Borda total.": "Encuentra el total de Borda de cada mascota.", "Hawks: 9×3 + 8×1 + 5×1 + 2×2. Check: all three totals add to 24 × 6 = 144.": "Hawks: 9×3 + 8×1 + 5×1 + 2×2. Comprueba: los tres totales suman 24 × 6 = 144.", "Who wins the Borda count?": "¿Quién gana el conteo de Borda?", "Lions had the fewest first-place votes but won the Borda count. Which statement explains why?": "Lions tuvo la menor cantidad de votos de primer lugar, pero ganó el conteo de Borda. ¿Qué afirmación explica por qué?", "Lions is ranked 1st or 2nd on every ballot, so it collects points from everyone": "Lions está en 1.º o 2.º lugar en todas las boletas, así que recibe puntos de todos", "Borda gives bonus points to last-place candidates": "Borda da puntos extra a los candidatos de último lugar", "Lions had a majority of first-place votes": "Lions tuvo mayoría absoluta de votos de primer lugar", "The Borda count ignores first-place votes": "El conteo de Borda ignora los votos de primer lugar", "Head to head, Lions beats Hawks 15–9 and beats Wolves 16–8. Which method knocked Lions out first?": "En enfrentamientos uno contra uno, Lions le gana a Hawks 15–9 y a Wolves 16–8. ¿Qué método eliminó primero a Lions?", "Borda count": "Conteo de Borda", "Both methods": "Ambos métodos", "Neither method": "Ningún método", "Plurality winner?": "¿Ganador por pluralidad?", "Top-two runoff: enter the final totals.": "Segunda vuelta entre los dos primeros: escribe los totales finales.", "Top-two runoff winner?": "¿Ganador de la segunda vuelta entre los dos primeros?", "Sequential runoff, round 1: which theme is eliminated?": "Segunda vuelta secuencial, ronda 1: ¿qué tema se elimina?", "Sequential runoff, round 2: enter the new first-place totals.": "Segunda vuelta secuencial, ronda 2: escribe los nuevos totales de primer lugar.", "Round 2: which theme is eliminated next?": "Ronda 2: ¿qué tema se elimina después?", "Sequential runoff winner?": "¿Ganador de la segunda vuelta secuencial?", "Borda count (4, 3, 2, 1): enter each theme's total.": "Conteo de Borda (4, 3, 2, 1): escribe el total de cada tema.", "Check: the four totals add to 32 × 10 = 320.": "Comprueba: los cuatro totales suman 32 × 10 = 320.", "Borda count winner?": "¿Ganador del conteo de Borda?", "Jordan says: “In sequential runoff, I eliminated Old Hollywood. Then Galaxy still had the most votes, so Galaxy wins.” What is Jordan's error?": "Jordan dice: “En la segunda vuelta secuencial, eliminé Old Hollywood. Después, Galaxy seguía teniendo más votos, así que Galaxy gana.” ¿Cuál es el error de Jordan?", "Jordan should have eliminated Galaxy first": "Jordan debió eliminar Galaxy primero", "Galaxy has 12 of 32 votes, which is not a majority, so the rounds must continue": "Galaxy tiene 12 de 32 votos, que no es mayoría absoluta, así que las rondas deben continuar", "Old Hollywood's votes should be thrown out, not moved": "Los votos de Old Hollywood deben descartarse, no trasladarse", "Jordan should have used Borda points in round 2": "Jordan debió usar puntos de Borda en la ronda 2", "How many of the 32 voters ranked Galaxy last?": "¿Cuántos de los 32 votantes pusieron a Galaxy en último lugar?", "Galaxy has the most first-place votes, but most voters ranked it last. The committee must choose its method before it counts. Which method would you recommend? Defend it with at least two numbers from the schedule, and name one weakness of your method.": "Galaxy tiene más votos de primer lugar, pero la mayoría de los votantes lo puso en último lugar. El comité debe elegir su método antes de contar. ¿Qué método recomendarías? Defiéndelo con al menos dos números de la tabla y menciona una debilidad de tu método.", "Recommends a method, uses two or more correct numbers, explains how they support it, and names a real weakness": "Recomienda un método, usa dos o más números correctos, explica cómo lo apoyan y menciona una debilidad real", "Recommends a method with two correct numbers, but the weakness or explanation is thin": "Recomienda un método con dos números correctos, pero la debilidad o la explicación es débil", "Recommends a method with one correct number or general reasoning": "Recomienda un método con un número correcto o un razonamiento general", "States a method with no evidence": "Menciona un método sin evidencia", "No response": "Sin respuesta", "In a sequential runoff, which candidate is eliminated in each round?": "En una segunda vuelta secuencial, ¿qué candidato se elimina en cada ronda?", "The candidate with the most last-place votes": "El candidato con más votos de último lugar", "The candidate with the fewest first-place votes": "El candidato con menos votos de primer lugar", "The candidate with the lowest Borda total": "El candidato con el total de Borda más bajo", "The candidate who loses the most head-to-head matchups": "El candidato que pierde más enfrentamientos uno contra uno", "In a Borda count with 4 candidates, how many points is a first-place ranking worth?": "En un conteo de Borda con 4 candidatos, ¿cuántos puntos vale un primer lugar?", "First-place votes: A = 15, B = 14, C = 11. Which statement is true?": "Votos de primer lugar: A = 15, B = 14, C = 11. ¿Qué afirmación es verdadera?", "A wins by plurality and by majority": "A gana por pluralidad y por mayoría absoluta", "A wins by plurality, but no candidate has a majority": "A gana por pluralidad, pero ningún candidato tiene mayoría absoluta", "B wins because A and C split the vote": "B gana porque A y C dividen el voto", "There is no plurality winner": "No hay ganador por pluralidad", "Election P: who wins a top-two runoff?": "Elección P: ¿quién gana una segunda vuelta entre los dos primeros?", "A, 6 to 9": "A, 6 a 9", "B, 9 to 6": "B, 9 a 6", "C, 9 to 6": "C, 9 a 6", "A, because A has the most first-place votes": "A, porque A tiene más votos de primer lugar", "Election P: what is B's Borda total (3, 2, 1)?": "Elección P: ¿cuál es el total de Borda de B (3, 2, 1)?", "Use the approval ballots above. Who wins by approval voting?": "Usa las boletas de aprobación de arriba. ¿Quién gana por votación por aprobación?", "A, with 10 approvals": "A, con 10 aprobaciones", "B, with 11 approvals": "B, con 11 aprobaciones", "C, with 9 approvals": "C, con 9 aprobaciones", "A and C tie": "A y C empatan", "Senior Trip: the Aquarium has the most first-place votes but loses under the other three methods. Which fact best explains this?": "Viaje de último año: el Acuario tiene más votos de primer lugar, pero pierde con los otros tres métodos. ¿Qué dato lo explica mejor?", "The Aquarium has 14 first-place votes": "El Acuario tiene 14 votos de primer lugar", "23 of the 37 voters ranked the Aquarium last": "23 de los 37 votantes pusieron al Acuario en último lugar", "The Beach has only 4 first-place votes": "La Playa tiene solo 4 votos de primer lugar", "Carowinds was ranked first by 11 voters": "11 votantes pusieron a Carowinds en primer lugar", "A committee wants a method that rewards broad support, not just first choices. For the Mascot election, which method and winner fit that goal?": "Un comité quiere un método que premie el apoyo amplio, no solo las primeras opciones. En la elección de la mascota, ¿qué método y ganador cumplen ese objetivo?", "Plurality — Hawks": "Pluralidad — Hawks", "Top-two runoff — Wolves": "Segunda vuelta (dos primeros) — Wolves", "Borda count — Lions": "Conteo de Borda — Lions", "Top-two runoff — Lions": "Segunda vuelta (dos primeros) — Lions", "I can define and distinguish voting terminology and preference ballots.": "Puedo definir y distinguir la terminología de votación y las boletas de preferencia.", "I can apply plurality, majority, runoff, sequential runoff, preference, and approval voting to review examples.": "Puedo aplicar la pluralidad, la mayoría absoluta, la segunda vuelta, la segunda vuelta secuencial, la votación preferencial y la votación por aprobación a ejemplos de repaso.", "Find each candidate's Borda total (3, 2, 1).": "Encuentra el total de Borda de cada candidato (3, 2, 1).", "Does the winner change between the two methods? Explain why, using numbers from the schedule.": "¿Cambia el ganador entre los dos métodos? Explica por qué usando números de la tabla.", "Says the winner changes and explains with correct numbers (e.g., Xavier's 8 first-place votes vs. Zoe's 42 points or 11 last-place votes for Xavier)": "Dice que el ganador cambia y lo explica con números correctos (p. ej., los 8 votos de primer lugar de Xavier frente a los 42 puntos de Zoe o los 11 votos de último lugar de Xavier)", "Says the winner changes with a reason but no correct numbers": "Dice que el ganador cambia con una razón, pero sin números correctos", "Incorrect or missing": "Incorrecto o en blanco", "Met": "Logrado", "Near Mastery": "Casi logrado", "Need More": "Necesito más apoyo", "Learning target": "Objetivo de aprendizaje", "Success criteria": "Criterios de éxito", "I am learning to review and connect key voting-system concepts before the summative assessment.": "Estoy aprendiendo a repasar y conectar los conceptos clave de los sistemas de votación antes de la evaluación sumativa.", "Number of voters": "Número de votantes", "Preference schedule: ": "Tabla de preferencias: ", " Total voters: ": " Total de votantes: ", "Candidates approved": "Candidatos aprobados", "Approval ballots: Student Store Snack": "Boletas de aprobación: merienda de la tienda escolar", "19 students approved every snack they would accept.": "19 estudiantes aprobaron cada merienda que aceptarían.", "Plurality": "Pluralidad", "Most first-place votes wins.": "Gana quien tenga más votos de primer lugar.", "Keep the top two; move every other ballot to whichever of the two it ranks higher.": "Quedan los dos primeros; cada otra boleta pasa al que esté más arriba de los dos.", "Sequential runoff": "Segunda vuelta secuencial", "Drop the last-place candidate, move those ballots, repeat until someone has a majority.": "Elimina al último lugar, traslada esas boletas y repite hasta que alguien tenga mayoría absoluta.", "Preference voting (Borda)": "Votación preferencial (Borda)", "4 points for 1st, 3 for 2nd, 2 for 3rd, 1 for 4th. Most points wins.": "4 puntos por el 1.º, 3 por el 2.º, 2 por el 3.º y 1 por el 4.º. Gana quien sume más puntos.", "Winner: ": "Ganador: ", "Your teacher will reveal this count.": "Tu maestro revelará este conteo.", "Reveal next method": "Mostrar el siguiente método", "Join today's lesson": "Únete a la lección de hoy", "35 practice questions to get ready for the summative assessment. You get 2 attempts on every question.": "35 preguntas de práctica para prepararte para la evaluación sumativa. Tienes 2 intentos en cada pregunta.", "First and last name": "Nombre y apellido", "Class period": "Período de clase", "Choose…": "Elige…", "Join lesson": "Unirme a la lección", "Type your first and last name.": "Escribe tu nombre y apellido.", "Choose your class period.": "Elige tu período de clase.", "Connecting…": "Conectando…", "Teacher sign-in": "Acceso del maestro", "Voting Systems Review": "Repaso de sistemas de votación", "Discrete Mathematics · DM.DPSR.1.1 · Review · 51 min": "Matemáticas discretas · DM.DPSR.1.1 · Repaso · 51 min", "Eyes up front": "Mirada al frente", "Hands off the keyboard. Your work is saved.": "Manos fuera del teclado. Tu trabajo está guardado.", "Now": "Ahora", " · one attempt": " · un intento", " · 2 attempts per question": " · 2 intentos por pregunta", "Your teacher will open this section.": "Tu maestro abrirá esta sección.", "Challenge": "Reto", "Prediction": "Predicción", "Submitted. Your answers are locked. Your code is at the end of Section 4. ": "Entregado. Tus respuestas están bloqueadas. Tu código está al final de la Sección 4. ", "Show my code": "Ver mi código", "Your answers are not reaching your teacher live from this account. Keep working: at the end of Section 4 you will get a submission code to turn in.": "Tus respuestas no le llegan a tu maestro en vivo desde esta cuenta. Sigue trabajando: al final de la Sección 4 recibirás un código de entrega.", "Lock in": "Confirmar", "Check": "Revisar", "Answer": "Respuesta", "Your response": "Tu respuesta", "Saving…": "Guardando…", "Saved": "Guardado", "Saved on this page": "Guardado en esta página", "Show a hint": "Ver una pista", "Correct on the first try.": "Correcto en el primer intento.", "Correct. Nice fix.": "Correcto. ¡Bien corregido!", "No attempts left. The correct answer is ": "No te quedan intentos. La respuesta correcta es ", "Not yet. You have 1 attempt left.": "Todavía no. Te queda 1 intento.", " Try the hint.": " Usa la pista.", " Recheck your work.": " Revisa tu trabajo.", "Prediction locked in. Keep it in mind as we count.": "Predicción registrada. Tenla en mente mientras contamos.", "Thanks. Your teacher sees this rating.": "Gracias. Tu maestro verá esta autoevaluación.", "Locked in. Results appear when your teacher releases them.": "Respuesta confirmada. Los resultados aparecerán cuando tu maestro los publique.", "Correct.": "Correcto.", "Incorrect. The correct answer is highlighted.": "Incorrecto. La respuesta correcta está resaltada.", " Correct totals: ": " Totales correctos: ", "Prediction recorded": "Predicción registrada", "Turn in your work": "Entrega tu trabajo", "Your answers are locked. Paste this code where your teacher tells you (Google Classroom).": "Tus respuestas están bloqueadas. Pega este código donde indique tu maestro (Google Classroom).", "Copy code": "Copiar código", "Code copied": "Código copiado", "Code selected. Press Ctrl+C.": "Código seleccionado. Presiona Ctrl+C.", "Getting your code locks every answer in this lesson. You cannot change anything after this.": "Al obtener tu código se bloquean todas tus respuestas de esta lección. No podrás cambiar nada después.", "Lock and get my code": "Bloquear y obtener mi código", "Keep working": "Seguir trabajando", "Get my submission code": "Obtener mi código de entrega", "Table 1: Homecoming Themes": "Tabla 1: temas para el baile de bienvenida", "33 students ranked three homecoming themes. Use Table 1 for Questions 13–18 and 22–24.": "33 estudiantes ordenaron tres temas para el baile de bienvenida. Usa la tabla 1 en las preguntas 13–18 y 22–24.", "Table 1 (repeated)": "Tabla 1 (repetida)", "Table 3: End-of-Year Events": "Tabla 3: eventos de fin de año", "40 club members ranked four end-of-year events. Use Table 3 for Questions 31, 32 and 35.": "40 miembros del club ordenaron cuatro eventos de fin de año. Usa la tabla 3 en las preguntas 31, 32 y 35.", "Table 3 (repeated)": "Tabla 3 (repetida)", "Table 2: 36 approval ballots": "Tabla 2: 36 boletas de aprobación", "A ✓ means that group approves the candidate.": "Un ✓ significa que ese grupo aprueba al candidato.", "Table 2 (repeated)": "Tabla 2 (repetida)", "Complete the sentence.": "Completa la oración.", "preference ballot": "boleta de preferencia", "approval ballot": "boleta de aprobación", "plurality ballot": "boleta de pluralidad", "runoff ballot": "boleta de segunda vuelta", "Ranked ballots are preference ballots.": "Las boletas ordenadas son boletas de preferencia.", "A ballot on which each voter lists the candidates in order of preference is called a ___.": "Una boleta en la que cada votante ordena a los candidatos según su preferencia se llama ___.", "Which statement describes a plurality?": "¿Qué afirmación describe una pluralidad?", "More than half of all the votes": "Más de la mitad de todos los votos", "Exactly half of the votes": "Exactamente la mitad de los votos", "The most votes, even if it is not more than half": "La mayor cantidad de votos, aunque no sea más de la mitad", "Every vote in the election": "Todos los votos de la elección", "Plurality = most votes; it may be under half.": "Pluralidad = la mayor cantidad de votos; puede ser menos de la mitad.", "An election has 50 voters. What is the fewest votes a candidate needs for a majority?": "Una elección tiene 50 votantes. ¿Cuál es la menor cantidad de votos que necesita un candidato para tener mayoría absoluta?", "26": "26", "25": "25", "25.5": "25.5", "27": "27", "Half of 50 is 25; more than half is 26.": "La mitad de 50 es 25; más de la mitad es 26.", "A club has 75 voting members, and all of them vote. What is the majority threshold?": "Un club tiene 75 miembros con voto y todos votan. ¿Cuál es el umbral de mayoría absoluta?", "37": "37", "38": "38", "37.5": "37.5", "39": "39", "Half of 75 is 37.5; the next whole number is 38.": "La mitad de 75 es 37.5; el siguiente número entero es 38.", "In a top-two runoff, which candidates advance to the final round?": "En una segunda vuelta entre los dos primeros, ¿qué candidatos pasan a la ronda final?", "The two candidates with the fewest last-place votes": "Los dos candidatos con menos votos de último lugar", "The two candidates with the highest Borda totals": "Los dos candidatos con los totales de Borda más altos", "Every candidate who earned at least one vote": "Todos los candidatos que obtuvieron al menos un voto", "The two candidates with the most first-place votes": "Los dos candidatos con más votos de primer lugar", "Only the top two by first-place votes advance.": "Solo pasan los dos primeros según los votos de primer lugar.", "Give a partner a 3-candidate example where someone wins a plurality but not a majority.": "Dale a un compañero un ejemplo con 3 candidatos en el que alguien gane por pluralidad pero no por mayoría absoluta.", "In a Borda count with 3 candidates (3-2-1), how many points does a last-place ranking earn?": "En un conteo de Borda con 3 candidatos (3-2-1), ¿cuántos puntos recibe un último lugar?", "0": "0", "2": "2", "1": "1", "3": "3", "3 candidates: 1st = 3, 2nd = 2, 3rd = 1.": "3 candidatos: 1.º = 3, 2.º = 2, 3.º = 1.", "In approval voting, may one voter approve more than one candidate?": "En la votación por aprobación, ¿puede un votante aprobar a más de un candidato?", "Yes — a voter may approve every candidate they find acceptable": "Sí: un votante puede aprobar a todos los candidatos que considere aceptables", "No — each voter approves exactly one candidate": "No: cada votante aprueba exactamente a un candidato", "Only if the voter also ranks the candidates": "Solo si el votante también ordena a los candidatos", "Only in the final round of a runoff": "Solo en la ronda final de una segunda vuelta", "Approval ballots allow several approvals.": "Las boletas de aprobación permiten varias aprobaciones.", "When does a sequential runoff stop?": "¿Cuándo se detiene una segunda vuelta secuencial?", "After exactly two rounds": "Después de exactamente dos rondas", "When one candidate has a plurality": "Cuando un candidato tiene pluralidad", "When the last-place candidate has zero votes": "Cuando el candidato en último lugar tiene cero votos", "When one candidate has a majority of the remaining votes": "Cuando un candidato tiene mayoría absoluta de los votos restantes", "Keep eliminating until someone has more than half.": "Se sigue eliminando hasta que alguien tenga más de la mitad.", "which candidate came in second place overall": "qué candidato quedó en segundo lugar en total", "which candidate each group of voters ranked second": "qué candidato puso en segundo lugar cada grupo de votantes", "how many voters chose each candidate second": "cuántos votantes eligieron a cada candidato en segundo lugar", "the runner-up in the top-two runoff": "el segundo lugar de la segunda vuelta entre los dos primeros", "Read down each column; the 2nd row is that group’s 2nd choice.": "Lee hacia abajo cada columna; la 2.ª fila es la 2.ª opción de ese grupo.", "In a preference schedule, the row labeled “2nd choice” shows ___.": "En una tabla de preferencias, la fila llamada “2.ª opción” muestra ___.", "In a 3-candidate Borda count (3-2-1) with 20 voters, what must all the candidates’ totals add up to?": "En un conteo de Borda con 3 candidatos (3-2-1) y 20 votantes, ¿cuánto deben sumar los totales de todos los candidatos?", "120": "120", "60": "60", "20": "20", "80": "80", "Each ballot gives 3 + 2 + 1 = 6 points; 20 × 6 = 120.": "Cada boleta da 3 + 2 + 1 = 6 puntos; 20 × 6 = 120.", "Sort the methods: which use only first choices, which use every ranking, and which use no ranking at all?": "Clasifica los métodos: ¿cuáles usan solo las primeras opciones, cuáles usan todo el orden y cuáles no usan ningún orden?", "exactly half of the votes": "exactamente la mitad de los votos", "a plurality": "una pluralidad", "the most last-place votes": "la mayor cantidad de votos de último lugar", "the lowest Borda total": "el total de Borda más bajo", "More than half beats everyone else combined, so it is also the most.": "Más de la mitad supera a todos los demás juntos, así que también es la mayor cantidad.", "A candidate who wins a majority of the votes must also have ___.": "Un candidato que gana por mayoría absoluta de los votos también debe tener ___.", "Which of these methods does not use ranked ballots? Sort each method.": "¿Cuál de estos métodos no usa boletas ordenadas? Clasifica cada método.", "Uses ranked ballots": "Usa boletas ordenadas", "Does not use ranked ballots": "No usa boletas ordenadas", "Approval voting uses yes/no approvals, not rankings.": "La votación por aprobación usa aprobaciones de sí o no, no un orden.", "Approval voting": "Votación por aprobación", "Using Table 1, how many students voted in all?": "Usando la tabla 1, ¿cuántos estudiantes votaron en total?", "33": "33", "4": "4", "29": "29", "12": "12", "12 + 10 + 7 + 4 = 33.": "12 + 10 + 7 + 4 = 33.", "Students who voted in all": "Estudiantes que votaron en total", "Using Table 1, how many first-place votes does Carnival (C) have?": "Usando la tabla 1, ¿cuántos votos de primer lugar tiene Carnival (C)?", "7": "7", "17": "17", "11": "11", "C is 1st in the 7 and 4 columns: 7 + 4 = 11.": "C está en 1.er lugar en las columnas de 7 y 4: 7 + 4 = 11.", "Carnival’s first-place votes": "Votos de primer lugar de Carnival", "Using Table 1, which statement correctly describes the plurality result?": "Usando la tabla 1, ¿qué afirmación describe correctamente el resultado por pluralidad?", "Arcade Night wins with 12 of 33 (36.4%), but has no majority": "Arcade Night gana con 12 de 33 (36.4 %), pero no tiene mayoría absoluta", "Arcade Night wins with a majority of 12 votes": "Arcade Night gana con una mayoría absoluta de 12 votos", "Carnival wins because it appears first in two columns": "Carnival gana porque aparece primero en dos columnas", "Beach Party wins because it is 2nd in two columns": "Beach Party gana porque está en 2.º lugar en dos columnas", "1st place: A 12, C 11, B 10. A majority of 33 is 17; 12 < 17.": "Primer lugar: A 12, C 11, B 10. La mayoría absoluta de 33 es 17; 12 < 17.", "Before counting, predict the winner of Table 1. Did the counting rule change your prediction?": "Antes de contar, predice el ganador de la tabla 1. ¿La regla de conteo cambió tu predicción?", "Using Table 1, Arcade Night and Carnival advance to a top-two runoff. What is the result?": "Usando la tabla 1, Arcade Night y Carnival pasan a una segunda vuelta entre los dos primeros. ¿Cuál es el resultado?", "Arcade Night wins, 12 to 11": "Gana Arcade Night, 12 a 11", "Arcade Night wins, 22 to 11": "Gana Arcade Night, 22 a 11", "Carnival wins, 21 to 12": "Gana Carnival, 21 a 12", "Carnival wins, 17 to 16": "Gana Carnival, 17 a 16", "The 10 Beach Party ballots rank C above A: C = 11 + 10 = 21, A = 12.": "Las 10 boletas de Beach Party ponen a C por encima de A: C = 11 + 10 = 21, A = 12.", "Using Table 1, how many students ranked Arcade Night last, and what percent is that?": "Usando la tabla 1, ¿cuántos estudiantes pusieron a Arcade Night en último lugar y qué porcentaje es?", "17 students, about 51.5%": "17 estudiantes, aproximadamente 51.5 %", "12 students, about 36.4%": "12 estudiantes, aproximadamente 36.4 %", "10 students, about 30.3%": "10 estudiantes, aproximadamente 30.3 %", "21 students, about 63.6%": "21 estudiantes, aproximadamente 63.6 %", "A is 3rd in the 10 and 7 columns: 17; 17 ÷ 33 ≈ 51.5%.": "A está en 3.er lugar en las columnas de 10 y 7: 17; 17 ÷ 33 ≈ 51.5 %.", "Using Table 1 and a Borda count (3-2-1), what is Beach Party’s total?": "Usando la tabla 1 y un conteo de Borda (3-2-1), ¿cuál es el total de Beach Party?", "61": "61", "65": "65", "30": "30", "72": "72", "B: 10(3) + 12(2) + 7(2) + 4(1) = 30 + 24 + 14 + 4 = 72. (A 61, C 65; the sum 198 = 33 × 6.)": "B: 10(3) + 12(2) + 7(2) + 4(1) = 30 + 24 + 14 + 4 = 72. (A 61, C 65; la suma 198 = 33 × 6.)", "Using Table 2, who wins by approval voting, and what percent of voters approve that candidate?": "Usando la tabla 2, ¿quién gana por votación por aprobación y qué porcentaje de votantes aprueba a ese candidato?", "X, with 18 approvals (50%)": "X, con 18 aprobaciones (50 %)", "Y, with 20 approvals (about 55.6%)": "Y, con 20 aprobaciones (aproximadamente 55.6 %)", "Z, with 18 approvals (50%)": "Z, con 18 aprobaciones (50 %)", "Y, with 2 approvals (about 5.6%)": "Y, con 2 aprobaciones (aproximadamente 5.6 %)", "X = 12 + 6 = 18; Y = 12 + 8 = 20; Z = 10 + 8 = 18. 20 ÷ 36 ≈ 55.6%.": "X = 12 + 6 = 18; Y = 12 + 8 = 20; Z = 10 + 8 = 18. 20 ÷ 36 ≈ 55.6 %.", "In a 50-voter sequential runoff, Round 1 is A 18, B 14, C 11, D 7. D is eliminated: 6 of D’s voters rank B next and 1 ranks C next. What happens?": "En una segunda vuelta secuencial con 50 votantes, la ronda 1 es A 18, B 14, C 11, D 7. Se elimina D: 6 de los votantes de D ponen a B después y 1 pone a C después. ¿Qué sucede?", "A 25, B 14, C 11; A wins with a majority": "A 25, B 14, C 11; A gana con mayoría absoluta", "A 18, B 20, C 12; B wins because B has the most votes": "A 18, B 20, C 12; B gana porque tiene más votos", "A 18, B 20, C 12; no majority yet, so C is eliminated next": "A 18, B 20, C 12; todavía no hay mayoría absoluta, así que se elimina C", "A 18, B 14, C 18; B is eliminated next": "A 18, B 14, C 18; se elimina B", "B = 14 + 6 = 20, C = 11 + 1 = 12. A majority of 50 is 26; no one has it, so drop C.": "B = 14 + 6 = 20, C = 11 + 1 = 12. La mayoría absoluta de 50 es 26; nadie la tiene, así que se elimina C.", "In Table 2, why do the approval totals add up to more than the 36 voters?": "En la tabla 2, ¿por qué los totales de aprobación suman más que los 36 votantes?", "In a 60-voter election, a candidate receives 27 first-place votes. Which statement is true? Match & Fix: the statement below has one error. Click the error, then drag in the fix.": "En una elección con 60 votantes, un candidato recibe 27 votos de primer lugar. ¿Qué afirmación es verdadera? Relaciona y corrige: la afirmación de abajo tiene un error. Haz clic en el error y luego arrastra la corrección.", "27 is ": "27 es el ", "45%": "45 %", " of the votes, so the candidate ": " de los votos, así que el candidato ", "has": "tiene", " a majority.": " mayoría absoluta.", "does not have": "no tiene", "55%": "55 %", "27%": "27 %", "has more than": "tiene más que", "27 ÷ 60 = 45%; a majority of 60 needs 31.": "27 ÷ 60 = 45 %; la mayoría absoluta de 60 necesita 31.", "In Table 1, Beach Party has the fewest first-place votes but wins the Borda count. Which fact best explains this?": "En la tabla 1, Beach Party tiene la menor cantidad de votos de primer lugar, pero gana el conteo de Borda. ¿Qué dato lo explica mejor?", "Borda gives bonus points to the candidate with the fewest first-place votes": "Borda da puntos extra al candidato con menos votos de primer lugar", "Beach Party has a majority of first-place votes": "Beach Party tiene mayoría absoluta de votos de primer lugar", "29 of 33 rank Beach Party 1st or 2nd, so it earns points on almost every ballot": "29 de 33 ponen a Beach Party en 1.º o 2.º lugar, así que recibe puntos en casi todas las boletas", "The Borda count only counts second-place votes": "El conteo de Borda solo cuenta los votos de segundo lugar", "B is 1st or 2nd in the 12, 10 and 7 columns: 29 voters, which is broad support.": "B está en 1.º o 2.º lugar en las columnas de 12, 10 y 7: 29 votantes, un apoyo amplio.", "Kim says, “In Table 1, Carnival has 7 first-place votes because the Carnival column says 7.” Which response best evaluates Kim’s reasoning? Match & Fix: click the error in Kim’s statement, then drag in the fix.": "Kim dice: “En la tabla 1, Carnival tiene 7 votos de primer lugar porque la columna de Carnival dice 7.” ¿Qué respuesta evalúa mejor el razonamiento de Kim? Relaciona y corrige: haz clic en el error de la afirmación de Kim y luego arrastra la corrección.", "In Table 1, ": "En la tabla 1, ", "Carnival": "Carnival", " has ": " tiene ", " first-place votes because the Carnival column says 7.": " votos de primer lugar porque la columna de Carnival dice 7.", "11 (7 + 4)": "11 (7 + 4)", "Beach Party": "Beach Party", "Add every column where the candidate is ranked 1st: Carnival is 1st in the 7 and 4 columns, so 7 + 4 = 11.": "Suma cada columna donde el candidato está en 1.er lugar: Carnival está primero en las columnas de 7 y 4, así que 7 + 4 = 11.", "In Table 1, suppose the 10 Beach Party voters change only their lower choices to B > A > C. All other ballots stay the same. Who wins the top-two runoff now?": "En la tabla 1, supón que los 10 votantes de Beach Party cambian solo sus opciones inferiores a B > A > C. Las demás boletas no cambian. ¿Quién gana ahora la segunda vuelta entre los dos primeros?", "Carnival still wins, 21 to 12": "Carnival sigue ganando, 21 a 12", "Carnival wins, 22 to 11": "Gana Carnival, 22 a 11", "Beach Party wins, because its voters changed": "Gana Beach Party, porque sus votantes cambiaron", "The top two are still A and C. The 10 ballots now rank A above C: A = 12 + 10 = 22, C = 11.": "Los dos primeros siguen siendo A y C. Las 10 boletas ahora ponen a A por encima de C: A = 12 + 10 = 22, C = 11.", "A 30-voter approval election: 10 voters approve J and K · 9 approve K only · 7 approve J and L · 4 approve L only. K is currently the winner. The 10-voter group’s favorite is J, so they approve only J (bullet voting). All other ballots stay the same. What happens?": "Una elección por aprobación con 30 votantes: 10 votantes aprueban a J y K · 9 aprueban solo a K · 7 aprueban a J y L · 4 aprueban solo a L. Ahora gana K. El favorito del grupo de 10 votantes es J, así que aprueban solo a J (voto único). Las demás boletas no cambian. ¿Qué sucede?", "K still wins with 19 approvals": "K sigue ganando con 19 aprobaciones", "J wins with 17 approvals, and K drops to 9": "J gana con 17 aprobaciones y K baja a 9", "J wins with 27 approvals": "J gana con 27 aprobaciones", "J and K tie with 17 approvals each": "J y K empatan con 17 aprobaciones cada uno", "Before: J 17, K 19, L 11. After: J 17, K 9, L 11, so J wins.": "Antes: J 17, K 19, L 11. Después: J 17, K 9, L 11, así que gana J.", "Q23: what is the easiest mistake to make when reading a schedule, and how do you avoid it?": "P23: ¿cuál es el error más fácil de cometer al leer una tabla y cómo lo evitas?", "In an 80-voter approval election, the totals are E 44, F 41, and G 30 (115 approvals in all). Which conclusion is best supported?": "En una elección por aprobación con 80 votantes, los totales son E 44, F 41 y G 30 (115 aprobaciones en total). ¿Qué conclusión está mejor apoyada?", "Only E has a majority, because only one candidate can have more than half": "Solo E tiene mayoría absoluta, porque solo un candidato puede tener más de la mitad", "No one has a majority, because 44 ÷ 115 is less than 50%": "Nadie tiene mayoría absoluta, porque 44 ÷ 115 es menos del 50 %", "The results are invalid because 115 is more than 80": "Los resultados no son válidos porque 115 es más que 80", "Both E and F were approved by a majority of voters (55% and about 51.3%)": "Tanto E como F fueron aprobados por la mayoría absoluta de los votantes (55 % y aproximadamente 51.3 %)", "Use the number of voters: 44 ÷ 80 = 55%, 41 ÷ 80 ≈ 51.3%.": "Usa el número de votantes: 44 ÷ 80 = 55 %, 41 ÷ 80 ≈ 51.3 %.", "A headline reads: “Patel wins with majority support.” The results were Patel 515, Nguyen 300, Ortiz 185. Is the headline supported?": "Un titular dice: “Patel gana con apoyo mayoritario.” Los resultados fueron Patel 515, Nguyen 300, Ortiz 185. ¿Los datos apoyan el titular?", "No: Patel needs 1,000 votes for a majority": "No: Patel necesita 1,000 votos para la mayoría absoluta", "No: Nguyen and Ortiz together have 485, so it is a tie": "No: Nguyen y Ortiz juntos tienen 485, así que es un empate", "Yes: Patel has 515 of 1,000 votes (51.5%), and a majority needs 501": "Sí: Patel tiene 515 de 1,000 votos (51.5 %), y la mayoría absoluta necesita 501", "Yes: Patel has the most votes, and the most votes is always a majority": "Sí: Patel tiene más votos, y la mayor cantidad de votos siempre es mayoría absoluta", "Total 1,000; majority 501; 515 > 501.": "Total 1,000; mayoría absoluta 501; 515 > 501.", "In a 40-voter election, which set of first-place totals shows X winning by plurality while a runoff is still needed for a majority winner?": "En una elección con 40 votantes, ¿qué conjunto de totales de primer lugar muestra a X ganando por pluralidad mientras todavía se necesita una segunda vuelta para tener un ganador por mayoría absoluta?", "X = 18, Y = 15, Z = 7": "X = 18, Y = 15, Z = 7", "X = 21, Y = 12, Z = 7": "X = 21, Y = 12, Z = 7", "X = 15, Y = 18, Z = 7": "X = 15, Y = 18, Z = 7", "X = 20, Y = 20, Z = 0": "X = 20, Y = 20, Z = 0", "A majority of 40 is 21. 18 is the most but less than 21. (21 is a majority; Y leads in the third set; the last is a tie.)": "La mayoría absoluta de 40 es 21. 18 es la mayor cantidad, pero menos de 21. (21 es mayoría absoluta; Y va primero en el tercer conjunto; el último es un empate.)", "Which statement about a candidate who has a majority of first-place votes is true? Match & Fix: the statement below is false. Click the error, then drag in the fix that makes it true.": "¿Qué afirmación sobre un candidato que tiene mayoría absoluta de votos de primer lugar es verdadera? Relaciona y corrige: la afirmación de abajo es falsa. Haz clic en el error y luego arrastra la corrección que la hace verdadera.", "Every method, including Borda,": "Todos los métodos, incluido Borda,", " will ": " ", "always": "siempre", " elect that candidate.": " elegirán a ese candidato.", "Plurality, top-two runoff, and sequential runoff": "Pluralidad, segunda vuelta entre los dos primeros y segunda vuelta secuencial", "Only Borda": "Solo Borda", "No method": "Ningún método", "Only plurality": "Solo la pluralidad", "A majority of 1st-place votes wins plurality and Round 1 of both runoffs; Borda can still choose someone else.": "Una mayoría absoluta de votos de primer lugar gana la pluralidad y la ronda 1 de ambas segundas vueltas; Borda todavía puede elegir a otro.", "A 30-voter approval election also asked for one favorite. H: 14 approvals, 12 favorites · I: 25 approvals, 8 favorites · J: 17 approvals, 10 favorites. Which conclusion is best supported?": "Una elección por aprobación con 30 votantes también pidió un favorito. H: 14 aprobaciones, 12 favoritos · I: 25 aprobaciones, 8 favoritos · J: 17 aprobaciones, 10 favoritos. ¿Qué conclusión está mejor apoyada?", "H should win because H has the most favorites and approvals combined": "H debería ganar porque tiene más favoritos y aprobaciones combinados", "I wins by approval with 25 of 30 (about 83.3%), even though I has the fewest favorites": "I gana por aprobación con 25 de 30 (aproximadamente 83.3 %), aunque I tiene menos favoritos", "J wins because J is in the middle on both counts": "J gana porque está en medio en ambos conteos", "No one wins because the favorites add up to 30": "Nadie gana porque los favoritos suman 30", "Approval counts acceptability: I = 25 of 30 ≈ 83.3%.": "La aprobación mide qué tan aceptable es: I = 25 de 30 ≈ 83.3 %.", "Q29: which methods always respect a majority winner? Why might Borda not?": "P29: ¿qué métodos siempre respetan a un ganador por mayoría absoluta? ¿Por qué Borda podría no hacerlo?", "In Table 3, Pizza Party has the most first-place votes. Which fact best shows it is a weak choice?": "En la tabla 3, Pizza Party tiene más votos de primer lugar. ¿Qué dato muestra mejor que es una opción débil?", "Pizza Party has 15 first-place votes": "Pizza Party tiene 15 votos de primer lugar", "Quiz Bowl has 11 first-place votes": "Quiz Bowl tiene 11 votos de primer lugar", "Scavenger Hunt has only 5 first-place votes": "Scavenger Hunt tiene solo 5 votos de primer lugar", "25 of 40 members (62.5%) rank Pizza Party last": "25 de 40 miembros (62.5 %) ponen a Pizza Party en último lugar", "P is 4th in the 11, 9 and 5 columns: 25 of 40 = 62.5%, so a majority ranked it last.": "P está en 4.º lugar en las columnas de 11, 9 y 5: 25 de 40 = 62.5 %, así que la mayoría lo puso en último lugar.", "Use Table 3. Find the winner by plurality, top-two runoff, sequential runoff, and Borda (4-3-2-1). Match each method to its winner.": "Usa la tabla 3. Halla el ganador por pluralidad, segunda vuelta entre los dos primeros, segunda vuelta secuencial y Borda (4-3-2-1). Relaciona cada método con su ganador.", "P · Pizza Party": "P · Pizza Party", "Q · Quiz Bowl": "Q · Quiz Bowl", "R · Rock Climbing": "R · Rock Climbing", "S · Scavenger Hunt": "S · Scavenger Hunt", "Plurality P 15. Runoff P vs Q: Q 25 to 15. Sequential: drop S → P 15, R 14, Q 11; drop Q → R 25 to 15. Borda: P 85, Q 126, R 103, S 86.": "Pluralidad: P 15. Segunda vuelta P contra Q: Q 25 a 15. Secuencial: se elimina S → P 15, R 14, Q 11; se elimina Q → R 25 a 15. Borda: P 85, Q 126, R 103, S 86.", "Borda (4-3-2-1)": "Borda (4-3-2-1)", "Design check: 25 voters, candidates A, B, C, three voter groups, and the plurality winner loses the top-two runoff. Which schedule works?": "Revisión de diseño: 25 votantes, candidatos A, B, C, tres grupos de votantes, y el ganador por pluralidad pierde la segunda vuelta entre los dos primeros. ¿Qué tabla funciona?", "13: A>B>C · 8: B>C>A · 4: C>B>A — A has a majority, so A wins": "13: A>B>C · 8: B>C>A · 4: C>B>A — A tiene mayoría absoluta, así que gana A", "10: A>B>C · 8: B>C>A · 7: C>A>B — C’s voters go to A; A wins 17 to 8": "10: A>B>C · 8: B>C>A · 7: C>A>B — los votantes de C van a A; A gana 17 a 8", "10: A>B>C · 8: B>C>A · 7: C>B>A — C’s 7 voters go to B; B beats A 15 to 10": "10: A>B>C · 8: B>C>A · 7: C>B>A — los 7 votantes de C van a B; B le gana a A 15 a 10", "12: A>B>C · 13: B>A>C — B wins with a majority": "12: A>B>C · 13: B>A>C — B gana con mayoría absoluta", "A 10, B 8, C 7; runoff A vs B: B = 8 + 7 = 15 > A 10. The others: A has a majority; A wins the runoff; only two groups (and B wins plurality).": "A 10, B 8, C 7; segunda vuelta A contra B: B = 8 + 7 = 15 > A 10. Las otras: A tiene mayoría absoluta; A gana la segunda vuelta; solo hay dos grupos (y B gana por pluralidad).", "In Table 2, which single change would make X the clear winner?": "En la tabla 2, ¿qué cambio único haría que X fuera el ganador claro?", "The 10 Z-only voters also approve X": "Los 10 votantes que solo aprueban a Z también aprueban a X", "The 6 X-only voters also approve Z": "Los 6 votantes que solo aprueban a X también aprueban a Z", "The 12-voter group approves only X": "El grupo de 12 votantes aprueba solo a X", "The 8-voter group approves only Z": "El grupo de 8 votantes aprueba solo a Z", "If the Z voters add X: X = 28, Y = 20, Z = 18. The others: Z wins with 24; X and Z tie 18 to 18; X and Z tie 18 to 18.": "Si los votantes de Z agregan a X: X = 28, Y = 20, Z = 18. Las otras: Z gana con 24; X y Z empatan 18 a 18; X y Z empatan 18 a 18.", "The club in Table 3 wants a method that rewards broad support. Which recommendation is best supported by the data?": "El club de la tabla 3 quiere un método que premie el apoyo amplio. ¿Qué recomendación está mejor apoyada por los datos?", "Plurality → Pizza Party: it has the most first-place votes (15)": "Pluralidad → Pizza Party: tiene más votos de primer lugar (15)", "Sequential runoff → Rock Climbing: it was never eliminated": "Segunda vuelta secuencial → Rock Climbing: nunca fue eliminado", "Borda count → Quiz Bowl: 35 of 40 rank it 1st or 2nd, and it has the top total, 126": "Conteo de Borda → Quiz Bowl: 35 de 40 lo ponen en 1.º o 2.º lugar, y tiene el total más alto, 126", "Borda count → Rock Climbing: it has the top total, 126": "Conteo de Borda → Rock Climbing: tiene el total más alto, 126", "Q is 1st or 2nd in the 15, 11 and 9 columns: 35 voters. Borda totals: Q 126 > R 103.": "Q está en 1.º o 2.º lugar en las columnas de 15, 11 y 9: 35 votantes. Totales de Borda: Q 126 > R 103.", "Q35: would your group choose the same method? Name one weakness of the method you pick.": "P35: ¿tu grupo elegiría el mismo método? Nombra una debilidad del método que elijas.", "Section 1 · Recall & Reproduction": "Sección 1 · Recordar y reproducir", "DOK 1 · Questions 1–12. Answer on your own first; you get 2 attempts per question. Then compare with a partner and explain why each of the other choices is wrong.": "DOK 1 · Preguntas 1–12. Responde solo primero; tienes 2 intentos por pregunta. Luego compara con un compañero y explica por qué cada una de las otras opciones es incorrecta.", "Section 2 · Skills & Concepts": "Sección 2 · Habilidades y conceptos", "DOK 2 · Questions 13–21. Use the table shown above each question. 2 attempts per question.": "DOK 2 · Preguntas 13–21. Usa la tabla que aparece arriba de cada pregunta. 2 intentos por pregunta.", "Section 3 · Strategic Thinking": "Sección 3 · Pensamiento estratégico", "DOK 3 · Questions 22–31. Explain your reasoning to a partner after each question. 2 attempts per question.": "DOK 3 · Preguntas 22–31. Explica tu razonamiento a un compañero después de cada pregunta. 2 intentos por pregunta.", "Section 4 · Extended Thinking": "Sección 4 · Pensamiento extendido", "DOK 4 · Questions 32–35. Multi-step: complete every count before choosing. 2 attempts per question.": "DOK 4 · Preguntas 32–35. Varios pasos: completa todos los conteos antes de elegir. 2 intentos por pregunta.", "Talk It Over: ": "Coméntalo: ", "Why: ": "Por qué: ", "Fix:": "Corrección:", "Drop here": "Suelta aquí", "Drop zone": "Zona para soltar", "Click the part that is wrong, then drag the correct words into the Fix box. You can also tap a card, then tap the box.": "Haz clic en la parte incorrecta y luego arrastra las palabras correctas al cuadro de corrección. También puedes tocar una tarjeta y luego tocar el cuadro.", "Drag a card into each box, or tap a card and then tap a box. Tap a filled box to clear it.": "Arrastra una tarjeta a cada cuadro, o toca una tarjeta y luego un cuadro. Toca un cuadro lleno para vaciarlo.", "True": "Verdadero", "False": "Falso", "True or False: in a 3-candidate election with 40 voters, a candidate with 20 first-place votes has a majority.": "Verdadero o falso: en una elección con 3 candidatos y 40 votantes, un candidato con 20 votos de primer lugar tiene mayoría absoluta.", "A majority of 40 must be more than half (20), so it takes 21 votes. 20 is exactly half.": "La mayoría absoluta de 40 debe ser más de la mitad (20), así que se necesitan 21 votos. 20 es exactamente la mitad.", "True or False: a candidate can win by plurality even if more than half of the voters ranked that candidate last.": "Verdadero o falso: un candidato puede ganar por pluralidad aunque más de la mitad de los votantes lo haya puesto en último lugar.", "Plurality counts only first choices. Example: 15 of 40 voters rank P first and the other 25 rank P last; P can still have the most first-place votes.": "La pluralidad solo cuenta las primeras opciones. Ejemplo: 15 de 40 votantes ponen a P primero y los otros 25 lo ponen último; P aún puede tener más votos de primer lugar.", "In approval voting, the approval totals can add up to ___ the number of voters, because each voter may approve ___.": "En la votación por aprobación, los totales de aprobación pueden sumar ___ el número de votantes, porque cada votante puede aprobar a ___.", "more than": "más que", "exactly half of": "exactamente la mitad de", "only one candidate": "un solo candidato", "more than one candidate": "más de un candidato", "no candidates": "ningún candidato", "Each voter can approve several candidates, so one voter can add to more than one total.": "Cada votante puede aprobar a varios candidatos, así que un votante puede sumar a más de un total.", "Match each term to its meaning.": "Relaciona cada término con su significado.", "Majority": "Mayoría absoluta", "Points for every place on the ballot": "Puntos por cada lugar de la boleta", "More than half of the votes": "Más de la mitad de los votos", "Drop the last-place candidate and recount until someone has more than half": "Eliminar al último lugar y volver a contar hasta que alguien tenga más de la mitad", "The most first-place votes, even if not more than half": "La mayor cantidad de votos de primer lugar, aunque no sea más de la mitad", "Majority = more than half; plurality = the most; Borda = points for every ranking; sequential runoff = eliminate and recount.": "Mayoría absoluta = más de la mitad; pluralidad = la mayor cantidad; Borda = puntos por cada lugar; segunda vuelta secuencial = eliminar y volver a contar.", "True or False: with 4 candidates, each Borda ballot (4-3-2-1) gives out 10 points, so 30 voters give out 300 points in all.": "Verdadero o falso: con 4 candidatos, cada boleta de Borda (4-3-2-1) reparte 10 puntos, así que 30 votantes reparten 300 puntos en total.", "4 + 3 + 2 + 1 = 10 points per ballot; 30 × 10 = 300. This is a quick check for any Borda count.": "4 + 3 + 2 + 1 = 10 puntos por boleta; 30 × 10 = 300. Es una comprobación rápida para cualquier conteo de Borda.", "5 quick questions: True/False and drag & drop. Answer on your own; you get 2 attempts per question, and your first try is recorded.": "5 preguntas rápidas: verdadero o falso y arrastrar y soltar. Responde solo; tienes 2 intentos por pregunta y se registra tu primer intento.", "First time": "Primera vez", "Next attempt": "Siguiente intento", "Already turned in attempt 1? Start your 2nd attempt here, at school or at home. Paste the submission code from your last attempt.": "¿Ya entregaste el intento 1? Empieza tu 2.º intento aquí, en la escuela o en casa. Pega el código de entrega de tu último intento.", "Already turned in attempt 1? Once your attempt 1 time is over, start your 2nd attempt here, at school or at home. Paste the submission code from your last attempt.": "¿Ya entregaste el intento 1? Cuando termine el tiempo del intento 1, empieza tu 2.º intento aquí, en la escuela o en casa. Pega el código de entrega de tu último intento.", "Paste the code above in Google Classroom first. Your 2nd attempt opens when your attempt 1 time is over. Start it here, or later at home from the Next attempt tab. It is your last attempt: your answers clear and a new 51-minute timer starts.": "Primero pega el código de arriba en Google Classroom. Tu 2.º intento se abre cuando termine el tiempo del intento 1. Empiézalo aquí, o más tarde en casa desde la pestaña Siguiente intento. Es tu último intento: tus respuestas se borran y empieza un nuevo temporizador de 51 minutos.", "Your last submission code": "Tu último código de entrega", "Teacher unlock code (only for a 3rd attempt or later)": "Código de desbloqueo del maestro (solo para un 3.er intento o más)", "Start next attempt": "Empezar el siguiente intento", "Paste the submission code from your last attempt.": "Pega el código de entrega de tu último intento.", "That submission code is not valid. Copy the whole code and try again.": "Ese código de entrega no es válido. Copia el código completo e inténtalo de nuevo.", "That code belongs to a different email.": "Ese código pertenece a otro correo.", "You have used your 2 attempts. Ask your teacher for an unlock code.": "Ya usaste tus 2 intentos. Pide a tu maestro un código de desbloqueo.", "That unlock code is not valid for this email.": "Ese código de desbloqueo no es válido para este correo.", "Need a second try?": "¿Necesitas otro intento?", "Paste the code above in Google Classroom first. Then you may start your 2nd attempt now, or later at home from the Next attempt tab. It is your last attempt: your answers clear and a new 51-minute timer starts.": "Primero pega el código de arriba en Google Classroom. Luego puedes empezar tu 2.º intento ahora, o más tarde en casa desde la pestaña Siguiente intento. Es tu último intento: tus respuestas se borran y empieza un nuevo temporizador de 51 minutos.", "Start my 2nd attempt": "Empezar mi 2.º intento", "Start attempt 2 now? Your attempt 1 answers clear on this page. Make sure you pasted your code in Google Classroom.": "¿Empezar el intento 2 ahora? Las respuestas del intento 1 se borran en esta página. Asegúrate de haber pegado tu código en Google Classroom.", "Yes, start attempt 2": "Sí, empezar el intento 2", "Cancel": "Cancelar", "You have used your 2 attempts. For another attempt, ask your teacher for an unlock code and type it under Teacher code.": "Ya usaste tus 2 intentos. Para otro intento, pide a tu maestro un código de desbloqueo y escríbelo en Código del maestro.", "Copying is turned off during this lesson.": "Copiar está desactivado durante esta lección.", "Pasting is turned off for answers.": "Pegar está desactivado en las respuestas.", "You left the lesson": "Saliste de la lección", "Leaving this page is recorded for your teacher. Stay on the lesson until you turn in your code.": "Salir de esta página queda registrado para tu maestro. Quédate en la lección hasta entregar tu código.", "Screenshot detected": "Captura de pantalla detectada", "Screenshots are not allowed during this lesson. This has been recorded for your teacher.": "No se permiten capturas de pantalla durante esta lección. Esto quedó registrado para tu maestro.", "Back to the lesson": "Volver a la lección", "Copying is turned off, and leaving this page is recorded for your teacher.": "Copiar está desactivado, y salir de esta página queda registrado para tu maestro.", "Calculator": "Calculadora", "Scientific calculator": "Calculadora científica", "Close calculator": "Cerrar calculadora", "Loading the calculator…": "Cargando la calculadora…", "The calculator could not load. Check your internet connection, or ask your teacher.": "La calculadora no se pudo cargar. Revisa tu conexión a internet o pregunta a tu maestro.", "Drag the bar to move the calculator.": "Arrastra la barra para mover la calculadora."};
+const ORD_ES=["1.ª opción","2.ª opción","3.ª opción","4.ª opción","5.ª opción"];
+let lang=(()=>{try{const v=JSON.parse(localStorage.getItem("wrw-lang"));if(v==="en"||v==="es")return v}catch(e){}return (navigator.language||"").toLowerCase().startsWith("es")?"es":"en"})();
+const isES=()=>lang==="es";
+const L=x=>isES()&&ES[x]!=null?ES[x]:x;
+function applyChrome(){if($("#calcBtn"))$("#calcBtn span:last-child").textContent=L("Calculator");if(calc)calc.updateSettings({language:isES()?"es":"en"});document.documentElement.lang=lang;$("#hdrSub").textContent=L("Discrete Mathematics · DM.DPSR.1.1 · Review · 51 min");$("#hdrTitle").textContent=L("Voting Systems Review");$("#pauseH").textContent=L("Eyes up front");$("#pauseP").textContent=L("Hands off the keyboard. Your work is saved.");const b=$("#hdrLang");if(b){b.textContent=isES()?"English":"Español";b.setAttribute("aria-label",isES()?"Switch to English":"Cambiar a español")}}
+function setLang(code){
+  if(code===lang)return;
+  document.querySelectorAll("textarea[id^=ta-]").forEach(ta=>{const it=ITEM[ta.id.slice(3)];if(it&&!ta.disabled&&(me.answers[it.id]?.v||"")!==ta.value)setAnswer(it,ta.value)});
+  lang=code;ls.set("wrw-lang",code);applyChrome();
+  if(role==="student"||role==="preview"){const y=window.scrollY;renderStudent();window.scrollTo(0,y)}
+  else if(role!=="teacher"){const n=$("#jName")?.value,p=$("#jPeriod")?.value,em=$("#jEmail")?.value;if(n!=null)me.name=n;if(p!=null)me.period=p;if(em!=null)me.email=em;renderJoin()}
+}
+function langPicker(){return el("div",{class:"row",role:"group","aria-label":"Language / Idioma"},el("span",{class:"hint"},"Language / Idioma"),[["en","English"],["es","Español"]].map(([c,l])=>el("button",{class:"btn sm "+(lang===c?"on":"ghost"),"aria-pressed":lang===c?"true":"false",onclick:()=>setLang(c)},l)))}
+
+/* ============================== HELPERS ============================== */
+const $=(s,r=document)=>r.querySelector(s);
+function el(tag,attrs,...kids){const n=document.createElement(tag);if(attrs)for(const[k,v]of Object.entries(attrs)){if(v==null||v===false)continue;if(k==="class")n.className=v;else if(k==="html")n.innerHTML=v;else if(k.startsWith("on"))n.addEventListener(k.slice(2),v);else n.setAttribute(k,v===true?"":v)}for(const c of kids.flat()){if(c==null||c===false)continue;n.append(c.nodeType?c:document.createTextNode(String(c)))}return n}
+function esc(s){return String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]))}
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,2200)}
+const ls={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+function grade(item,v){if(v==null)return null;if(item.type==="drag"||item.type==="fix")return String(v)===String(item.key);if(item.type==="num")return String(v).trim()!==""&&Number(v)===item.key;if(item.type==="choice")return v===item.key;if(item.type==="set")return item.fields.every(([k,,key])=>Number(v?.[k])===key&&String(v?.[k]??"").trim()!=="");return null}
+function lockIcon(){return el("span",{html:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="10" width="16" height="11"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>'})}
+
+/* ---------- schedule tables ---------- */
+function schedTable(key){
+  const e=E[key],c=Object.keys(e.cands),T=tot(e);
+  const tbl=el("table",{class:"sched"});
+  const head=el("tr",{},el("th",{},L("Number of voters")),e.groups.map(g=>el("td",{class:"voters"},g[0])));
+  tbl.append(head);
+  c.forEach((_,i)=>tbl.append(el("tr",{},el("th",{},isES()?ORD_ES[i]:ORD[i]+" choice"),e.groups.map(g=>el("td",{},g[1][i])))));
+  return el("div",{class:"scenario"},
+    el("h3",{},L("Preference schedule: ")+L(e.title)),
+    e.story?el("p",{},L(e.story)+(e.hideTotal?"":L(" Total voters: ")+T+".")):null,
+    el("div",{class:"sched-wrap"},tbl),
+    el("div",{class:"legend"},c.map(k=>el("span",{},el("b",{},k),L(e.cands[k])))));
+}
+function dataTable(t){
+  const tbl=el("table",{class:"sched"},el("tr",{},t.head.map(h=>el("th",{},L(h)))),t.rows.map(r=>el("tr",{},r.map((v,i)=>el("td",{class:i?"":"voters"},L(v))))));
+  return el("div",{class:"scenario"},t.title?el("h3",{},L(t.title)):null,t.note?el("p",{},L(t.note)):null,el("div",{class:"sched-wrap"},tbl));
+}
+function approvalTable(){
+  const rows=[[7,"A, B"],[5,"C"],[4,"B, C"],[3,"A"]];
+  const tbl=el("table",{class:"sched"},el("tr",{},el("th",{},L("Number of voters")),el("th",{},L("Candidates approved"))),rows.map(r=>el("tr",{},el("td",{class:"voters"},r[0]),el("td",{},r[1]))));
+  return el("div",{class:"scenario"},el("h3",{},L("Approval ballots: Student Store Snack")),el("p",{},L("19 students approved every snack they would accept.")),el("div",{class:"sched-wrap"},tbl));
+}
+
+/* ---------- method reveal cards (Lesson Focus) ---------- */
+function methodCards(key,step){
+  const e=E[key],N=n=>L(e.cands[n]),c=Object.keys(e.cands),T=tot(e);
+  const p=plurOf(e),r=runoffOf(e),q=irvOf(e),b=bordaOf(e);
+  const bw=Object.keys(b).reduce((x,y)=>b[x]>=b[y]?x:y);
+  const mini=(obj,keys)=>el("table",{class:"mini"},el("tr",{},keys.map(k=>el("th",{},k))),el("tr",{},keys.map(k=>el("td",{},obj[k]))));
+  const cards=[
+    [L("Plurality"),L("Most first-place votes wins."),()=>[mini(p.f,c),el("p",{},isES()?`Nadie tiene mayoría absoluta (se necesitan ${Math.floor(T/2)+1}).`:`No one has a majority (${Math.floor(T/2)+1} needed).`)],p.winner],
+    [L("Top-two runoff"),L("Keep the top two; move every other ballot to whichever of the two it ranks higher."),()=>[el("p",{},`${r.top[0]} vs ${r.top[1]}`),mini(r.h,r.top)],r.winner],
+    [L("Sequential runoff"),L("Drop the last-place candidate, move those ballots, repeat until someone has a majority."),()=>[el("div",{class:"work"},q.rounds.map((rd,i)=>el("div",{},(isES()?`Ronda ${i+1}: `:`Round ${i+1}: `)+Object.entries(rd).map(([k,v])=>k+" "+v).join(", ")+(q.out[i]?(isES()?` → se elimina ${q.out[i]}`:` → drop ${q.out[i]}`):(isES()?" → mayoría absoluta":" → majority"))))) ],q.winner],
+    [L("Preference voting (Borda)"),L("4 points for 1st, 3 for 2nd, 2 for 3rd, 1 for 4th. Most points wins."),()=>[mini(b,c),el("p",{},(isES()?"Comprobación: total de puntos = ":"Check: total points = ")+`${T} × 10 = ${T*10}.`)],bw]
+  ];
+  return el("div",{class:"methods"},cards.map(([t,rule,work,w],i)=>{
+    const shown=i<step;
+    return el("div",{class:"mcard"+(shown?"":" hide")},el("h3",{},t),el("p",{class:"hint"},rule),
+      shown?[...work(),el("div",{class:"win"},L("Winner: ")+N(w))]:el("p",{},L("Your teacher will reveal this count.")));
+  }));
+}
+
+/* ============================== RUNTIME ============================== */
+let db=null,user=null,downloads=null,uid=null;
+let role="loading"; // loading | student | teacher | preview
+let online=false;
+let session={open:[1],focus:1,step:0,reveal:{},paused:false,timerEnd:null};
+let me={name:"",period:"",answers:{},grades:{},joined:false};
+const SESSION_PATH="session/live";
+
+const capP=(async()=>{
+  if(!window.claude||!window.claude.use)return;
+  const [d,u,dl]=await Promise.all([claude.use("db"),claude.use("user"),claude.use("downloads")]);
+  db=d;user=u;downloads=dl;
+  if(user){try{uid=await user.id()}catch(e){}}
+  let teacher=false;
+  if(user&&db){try{teacher=await user.canEdit()}catch(e){}}
+  if(db){db.doc(SESSION_PATH).onSnapshot(s=>{if(s.exists){session={...session,...s.data()};onSession()}},()=>{})}
+  if(teacher){role="teacher";startTeacher()}
+})();
+
+/* ============================== STUDENT ============================== */
+const SESS_KEY="vsr-1028-v1-sessions",LAST_KEY="vsr-1028-v1-last",IMP_KEY="vsr-1028-v1-imported";
+try{["wrw-me","wrw-imported","wrw-1026-v5-me","wrw-1026-v5-imported"].forEach(k=>localStorage.removeItem(k))}catch(e){}
+const EMAIL_DOMAIN="@edu.lexington4.net";
+const EMAIL_RE=/^[a-z0-9._%+-]+@edu\.lexington4\.net$/;
+const normEmail=e=>String(e||"").trim().toLowerCase();
+const getSessions=()=>ls.get(SESS_KEY)||{};
+(()=>{const last=ls.get(LAST_KEY);const sv=last&&getSessions()[last];if(sv){me={...me,...sv,joined:false}}})();
+function resetMe(){Object.assign(me,{leaves:[],answers:{},grades:{},submitted:false,code:null,startedAt:null,mult:1,autoSub:false,submittedAt:null,reopenUntil:null,reopens:0,attempt:1});confirmSubmit=false;localStep=0;warned10=false;warned5=false}
+function persistLocal(){if(!me.email||role==="preview")return;const all=getSessions();all[me.email]={email:me.email,attempt:me.attempt||1,name:me.name,period:me.period,answers:me.answers,submitted:!!me.submitted,code:me.code||null,startedAt:me.startedAt||null,mult:me.mult||1,autoSub:!!me.autoSub,submittedAt:me.submittedAt||null,reopenUntil:me.reopenUntil||null,reopens:me.reopens||0,leaves:me.leaves||[]};ls.set(SESS_KEY,all);ls.set(LAST_KEY,me.email)}
+/* ---------- lesson timer + extended time ---------- */
+const LESSON_MIN=51;
+const EXT_CODES={"e4a08315":1.5,"a57a97cd":2};
+const extMult=code=>EXT_CODES[pinHash(String(code||"").toUpperCase().replace(/\s+/g,""))]||0;
+const limitMs=()=>Math.round(LESSON_MIN*(me.mult||1))*60000;
+const leftMs=()=>me.reopenUntil?me.reopenUntil-Date.now():(me.startedAt?me.startedAt+limitMs()-Date.now():limitMs());
+const fmtClock=ms=>{const t=Math.max(0,Math.ceil(ms/1000));const h=Math.floor(t/3600),m=Math.floor(t%3600/60),x=t%60;return (h?h+":"+String(m).padStart(2,"0"):m)+":"+String(x).padStart(2,"0")};
+let clockInt=null,warned10=false,warned5=false,extOpen=false;
+function startClock(){
+  clearInterval(clockInt);const c=$("#hdrClock");if(role!=="student"){c.hidden=true;return}
+  c.hidden=false;
+  const tick=()=>{
+    if(me.submitted){c.textContent=L("Submitted");c.classList.remove("low");c.classList.add("done");clearInterval(clockInt);return}
+    const ms=leftMs();
+    c.textContent=L("Time left")+" "+fmtClock(ms);c.classList.toggle("low",ms<=5*60000);
+    if(ms<=10*60000&&ms>5*60000&&!warned10){warned10=true;toast(L("10 minutes left."))}
+    if(ms<=5*60000&&ms>0&&!warned5){warned5=true;toast(L("5 minutes left. Finish up and get your code."))}
+    if(ms<=0)autoSubmit();
+  };
+  tick();clockInt=setInterval(tick,1000);
+}
+async function finalize(auto){confirmSubmit=false;me.autoSub=!!auto;me.submittedAt=Date.now();me.submitted=true;me.code=null;extOpen=false;persistLocal();try{me.code=await makeCode()}catch(e){me.code=null}persistLocal();renderStudent();window.scrollTo({top:0})}
+function autoSubmit(){if(me.submitted||role!=="student")return;document.querySelectorAll("textarea[id^=ta-]").forEach(ta=>{const it=ITEM[ta.id.slice(3)];if(it&&!ta.disabled&&(me.answers[it.id]?.v||"")!==ta.value){const p=me.answers[it.id]||{tries:0};me.answers[it.id]={...p,v:ta.value,at:Date.now()}}});finalize(true)}
+function extPanel(){
+  const msg=el("span",{class:"hint","aria-live":"polite"});
+  const inp=el("input",{class:"txt",id:"extCode",autocomplete:"off",placeholder:"XT… / NEW…",style:"width:170px"});
+  const apply=()=>{const m=extMult(inp.value);if(!m){const r=tryClassCode(inp.value);if(r<=0)msg.textContent=teacherCodeMsg(r);return}
+    me.mult=Math.max(me.mult||1,m);persistLocal();extOpen=false;renderStatus();startClock();
+    toast(isES()?`Tiempo extendido aplicado: ${Math.round(LESSON_MIN*me.mult)} minutos en total.`:`Extended time applied: ${Math.round(LESSON_MIN*me.mult)} minutes total.`)};
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter")apply()});
+  return el("div",{class:"notice"},el("div",{class:"row"},el("label",{for:"extCode"},el("b",{},L("Teacher code"))),inp,el("button",{class:"btn sm",onclick:apply},L("Apply")),el("button",{class:"btn ghost sm",onclick:()=>{extOpen=false;renderStatus()}},L("Close")),msg));
+}
+const MAX_TRIES=2;
+const outOfTries=(it,a)=>it.mode==="check"&&!!a&&a.ok!==true&&(a.tries||0)>=MAX_TRIES;
+
+let writeChain=Promise.resolve(),pendingPatch=null,created=false;
+function queueWrite(patch){
+  persistLocal();
+  if(!online||role==="preview")return;
+  pendingPatch=deepMerge(pendingPatch||{},patch);
+  writeChain=writeChain.then(async()=>{
+    if(!pendingPatch)return;const p=pendingPatch;pendingPatch=null;
+    try{await db.doc("subs/"+uid).update({...p,updatedAt:Date.now()})}
+    catch(e){if(e&&e.code==="unavailable"){await new Promise(r=>setTimeout(r,800+Math.random()*800));try{await db.doc("subs/"+uid).update({...p,updatedAt:Date.now()})}catch(e2){goOffline()}}else goOffline()}
+  });
+}
+function deepMerge(a,b){for(const[k,v]of Object.entries(b)){if(v&&typeof v==="object"&&!Array.isArray(v)&&a[k]&&typeof a[k]==="object")deepMerge(a[k],v);else a[k]=v}return a}
+function goOffline(){if(!online)return;online=false;toast("Live saving stopped. Your work stays on this page.");renderStatus()}
+
+async function join(){
+  const name=$("#jName").value.trim(),period=$("#jPeriod").value;
+  if(!name){$("#jErr").textContent=L("Type your first and last name.");return}
+  if(!period){$("#jErr").textContent=L("Choose your class period.");return}
+  const extIn=($("#jExt")?.value||"").trim();let extM=0;
+  if(extIn){extM=extMult(extIn);if(!extM){$("#jErr").textContent=L("That extended-time code is not valid.");return}}
+  const email=normEmail($("#jEmail")?.value);
+  if(!EMAIL_RE.test(email)){$("#jErr").textContent=L("Use your school email that ends with @edu.lexington4.net.");return}
+  const prev=getSessions()[email];
+  resetMe();if(prev)Object.assign(me,prev);
+  me.email=email;me.name=name;me.period=period;me.joined=true;
+  $("#jBtn").disabled=true;$("#jErr").textContent=L("Connecting…");
+  await Promise.race([capP,new Promise(r=>setTimeout(r,6000))]);
+  if(role==="teacher")return;
+  role="student";
+  if(extM)me.mult=Math.max(me.mult||1,extM);
+  if(!me.startedAt&&!me.submitted)me.startedAt=Date.now();
+  if(db&&uid){
+    try{
+      const ref=db.doc("subs/"+uid);const s=await ref.get();
+      if(s.exists){const d=s.data();me.answers={...(d.answers||{}),...me.answers};me.grades=d.grades||{};await ref.update({name,period,answers:me.answers,updatedAt:Date.now()})}
+      else await ref.set({name,period,answers:me.answers,grades:{},joinedAt:Date.now(),updatedAt:Date.now()});
+      online=true;
+      ref.onSnapshot(s=>{if(s.exists){const g=s.data().grades||{};if(JSON.stringify(g)!==JSON.stringify(me.grades)){me.grades=g;TEXT.forEach(drawFb)}}},()=>{});
+    }catch(e){online=false}
+  }
+  persistLocal();
+  renderStudent();
+}
+
+let joinTab="first";
+async function nextAttempt(){
+  const err=$("#nErr"),btn=$("#nBtn");err.textContent="";
+  const email=normEmail($("#nEmail").value);
+  if(!EMAIL_RE.test(email)){err.textContent=L("Use your school email that ends with @edu.lexington4.net.");return}
+  const raw=$("#nCode").value.trim();if(!raw){err.textContent=L("Paste the submission code from your last attempt.");return}
+  const d=await readCode(raw);if(!d){err.textContent=L("That submission code is not valid. Copy the whole code and try again.");return}
+  if(normEmail(d.email)!==email){err.textContent=L("That code belongs to a different email.");return}
+  const n=(d.attempt||1)+1;const local=getSessions()[email];
+  if(local&&(local.attempt||1)>=n){resetMe();Object.assign(me,local);me.joined=true;role="student";persistLocal();renderStudent();return}
+  if(n===2){const opens=attemptOpensAt(d.tm&&d.tm.s,d.tm&&d.tm.x,d.tm&&d.tm.e);if(Date.now()<opens){err.textContent=waitMsg(opens);return}}
+  if(n>=3){const u=($("#nUnlock").value||"").toUpperCase().replace(/\s+/g,"");
+    if(!u){err.textContent=L("You have used your 2 attempts. Ask your teacher for an unlock code.");return}
+    if(unlockCode(email,n)!==u){err.textContent=L("That unlock code is not valid for this email.");return}}
+  btn.disabled=true;err.textContent=L("Connecting…");
+  await Promise.race([capP,new Promise(r=>setTimeout(r,6000))]);
+  if(role==="teacher")return;
+  role="student";me.email=email;me.name=d.name;me.period=d.period;me.joined=true;
+  startAttempt(n,(d.tm&&d.tm.x)||1);
+}
+function renderJoin(){calcShow(false);document.body.classList.remove("secure");
+  const app=$("#app");app.className="wrap";app.innerHTML="";
+  const periods=["1st","2nd","3rd","4th","5th","6th","7th","8th"];
+  $("#hdrLang").hidden=true;$("#hdrClock").hidden=true;clearInterval(clockInt);applyChrome();
+  app.append(el("section",{class:"join"},
+    langPicker(),
+    el("div",{class:"tabs",role:"tablist",style:"margin-bottom:4px"},[["first","First time"],["next","Next attempt"]].map(([k,t])=>el("button",{type:"button",role:"tab",id:"jt-"+k,"aria-selected":joinTab===k?"true":"false",onclick:()=>{joinTab=k;renderJoin()}},L(t)))),
+    ...(joinTab==="next"?[
+    el("h2",{},L("Next attempt")),
+    el("p",{},L("Already turned in attempt 1? Once your attempt 1 time is over, start your 2nd attempt here, at school or at home. Paste the submission code from your last attempt.")),
+    el("label",{class:"field",for:"nEmail"},el("span",{},L("School email")),el("input",{class:"txt",id:"nEmail",type:"email",autocomplete:"email",inputmode:"email",placeholder:"name"+EMAIL_DOMAIN,value:me.email||""})),
+    el("label",{class:"field",for:"nCode"},el("span",{},L("Your last submission code")),el("textarea",{id:"nCode",rows:3,placeholder:"VR1.Z…",autocomplete:"off",spellcheck:"false"})),
+    el("details",{},el("summary",{class:"hint"},L("Teacher unlock code (only for a 3rd attempt or later)")),el("input",{class:"txt",id:"nUnlock",autocomplete:"off",placeholder:"UN3-0000",style:"width:170px;margin-top:6px","aria-label":L("Teacher unlock code (only for a 3rd attempt or later)")})),
+    el("p",{class:"hint"},isES()?"Tu temporizador de 51 minutos empieza cuando empiezas el intento.":"Your 51-minute timer starts when the attempt starts."),
+    el("div",{class:"row"},el("button",{class:"btn",id:"nBtn",onclick:nextAttempt},L("Start next attempt")),el("span",{id:"nErr",class:"hint","aria-live":"polite"}))
+    ]:[
+    el("h2",{},L("Join today's lesson")),
+    el("p",{},L("35 practice questions to get ready for the summative assessment. You get 2 attempts on every question.")),
+    el("label",{class:"field",for:"jName"},el("span",{},L("First and last name")),el("input",{class:"txt",id:"jName",autocomplete:"name",value:me.name||""})),
+    el("label",{class:"field",for:"jEmail"},el("span",{},L("School email")),el("input",{class:"txt",id:"jEmail",type:"email",autocomplete:"email",inputmode:"email",placeholder:"name"+EMAIL_DOMAIN,value:me.email||""})),
+    el("label",{class:"field",for:"jPeriod"},el("span",{},L("Class period")),el("select",{id:"jPeriod"},el("option",{value:""},L("Choose…")),periods.map(p=>el("option",{value:p,selected:me.period===p},p)))),
+    el("details",{},el("summary",{class:"hint"},L("Extended time code (only if your teacher gave you one)")),el("input",{class:"txt",id:"jExt",autocomplete:"off",placeholder:"XT00-0000",style:"width:170px;margin-top:6px","aria-label":L("Extended time code")})),
+    el("p",{class:"hint"},isES()?"Tu temporizador de 51 minutos empieza cuando te unes.":"Your 51-minute timer starts when you join."),
+    el("p",{class:"hint"},L("Copying is turned off, and leaving this page is recorded for your teacher.")),
+    el("div",{class:"row"},el("button",{class:"btn",id:"jBtn",onclick:join},L("Join lesson")),el("span",{id:"jErr",class:"hint","aria-live":"polite"}))]),
+    db?null:el("details",{class:"hint",style:"border-top:1px dotted var(--line);padding-top:10px"},el("summary",{},L("Teacher sign-in")),el("div",{class:"row",style:"margin-top:8px"},el("input",{class:"txt",id:"tPin",type:"password",inputmode:"numeric",autocomplete:"off","aria-label":"Teacher PIN",placeholder:"Teacher PIN",style:"width:160px"}),el("button",{class:"btn ghost sm",id:"tPinBtn",onclick:tryPin},"Open scoreboard"),el("span",{id:"tPinMsg","aria-live":"polite"})))
+  ));
+  $("#jName")?.addEventListener("keydown",e=>{if(e.key==="Enter")join()});
+  $("#jEmail")?.addEventListener("keydown",e=>{if(e.key==="Enter")join()});
+  $("#tPin")?.addEventListener("keydown",e=>{if(e.key==="Enter")tryPin()});
+}
+
+function isOpen(n){return role==="preview"||!online||(session.open||[]).includes(n)}
+function revealed(n){return !online||role==="preview"||!!(session.reveal||{})[n]}
+
+const itemNodes={};
+const REOPEN_MINS=[10,15,20,30,51];
+const normName=n=>String(n||"").toLowerCase().replace(/\s+/g," ").trim();
+function reopenCode(who,t,m){const h=parseInt(pinHash("reopen|rev1028|"+normName(who)+"|"+t+"|"+m),16);return "RO-"+h.toString(36).toUpperCase().padStart(6,"0").slice(-6)}
+function tryReopen(raw){
+  const v=String(raw||"").toUpperCase().replace(/\s+/g,"");if(!v||!me.submittedAt)return 0;
+  for(const m of REOPEN_MINS){if(reopenCode(me.email||me.name,me.submittedAt,m)===v){
+    me.submitted=false;me.autoSub=false;me.code=null;me.reopens=(me.reopens||0)+1;me.reopenUntil=Date.now()+m*60000;
+    warned10=false;warned5=false;confirmSubmit=false;persistLocal();renderStudent();window.scrollTo({top:0});
+    toast(isES()?`Lección reabierta: ${m} minutos.`:`Lesson reopened: ${m} minutes.`);return m}}
+  return 0;
+}
+function classCode(n){const h=parseInt(pinHash("attempt|rev1028|"+n),16);return "NEW"+n+"-"+h.toString(36).toUpperCase().padStart(4,"0").slice(-4)}
+function tryClassCode(raw){
+  const v=String(raw||"").toUpperCase().replace(/\s+/g,"");
+  for(let n=2;n<=9;n++){if(classCode(n)===v){
+    if(n<=(me.attempt||1))return -1;
+    const keepMult=me.mult||1;resetMe();me.mult=keepMult;me.attempt=n;me.startedAt=Date.now();extOpen=false;
+    persistLocal();renderStudent();window.scrollTo({top:0});
+    toast(isES()?`Nuevo intento ${n}: empieza la lección de nuevo.`:`Fresh attempt ${n}: the lesson starts over.`);return n}}
+  return 0;
+}
+function unlockCode(email,n){const h=parseInt(pinHash("unlock|rev1028|"+normEmail(email)+"|"+n),16);return "UN"+n+"-"+h.toString(36).toUpperCase().padStart(4,"0").slice(-4)}
+function startAttempt(n,keepMult){resetMe();me.mult=keepMult||1;me.attempt=n;me.startedAt=Date.now();extOpen=false;
+  persistLocal();renderStudent();window.scrollTo({top:0});
+  toast(isES()?`Intento ${n}: la lección empieza de nuevo.`:`Attempt ${n}: the lesson starts over.`)}
+function attemptOpensAt(start,mult,sub){return start?Math.max(start+Math.round(LESSON_MIN*(mult||1))*60000,sub||0):0}
+const hhmm=t=>new Date(t).toLocaleTimeString(isES()?"es":"en-US",{hour:"numeric",minute:"2-digit"});
+const waitMsg=t=>{const m=Math.max(1,Math.ceil((t-Date.now())/60000));return isES()?`Tu 2.º intento se abre cuando termine el tiempo del intento 1: a las ${hhmm(t)} (en ${m} min).`:`Your 2nd attempt opens when your attempt 1 time is over: at ${hhmm(t)} (in ${m} min).`};
+let nextAttInt=null;
+function tryUnlock(raw){const v=String(raw||"").toUpperCase().replace(/\s+/g,"");const n=(me.attempt||1)+1;
+  if(!me.email||!v||unlockCode(me.email,n)!==v)return 0;startAttempt(n,me.mult);return n}
+function teacherCodeMsg(r){return r===-1?L("You already started this attempt."):L("That code is not valid.")}
+/* ---------- lesson security ---------- */
+const secOn=()=>role==="student";
+const tracking=()=>role==="student"&&!me.submitted&&!!me.startedAt&&!!document.querySelector("#app .sec");
+const okNode=n=>{const e=n&&(n.nodeType===1?n:n.parentElement);return !!(e&&e.closest&&e.closest("input,textarea,#subcode,.code,#calcPanel"))};
+const okSel=()=>{const s=getSelection();return !s||s.isCollapsed||okNode(s.anchorNode)};
+let awayAt=null;
+let lastShot=0;
+function secLog(k,d){if(k==="s"){if(Date.now()-lastShot<1500)return;lastShot=Date.now()}me.leaves=me.leaves||[];me.leaves.push({t:Date.now()-(me.startedAt||Date.now()),d:d||0,k});persistLocal();secWarn(k)}
+function secWarn(k){$("#secWarn")?.remove();const n=(me.leaves||[]).filter(x=>x.k==="l").length;
+  const ok=el("button",{class:"btn",onclick:()=>w.remove()},L("Back to the lesson"));
+  const w=el("div",{id:"secWarn",role:"alertdialog","aria-modal":"true","aria-labelledby":"secWarnH"},el("div",{class:"box"},
+    el("h2",{id:"secWarnH"},k==="s"?L("Screenshot detected"):L("You left the lesson")+(isES()?` (vez ${n})`:` (time ${n})`)),
+    el("p",{},k==="s"?L("Screenshots are not allowed during this lesson. This has been recorded for your teacher."):L("Leaving this page is recorded for your teacher. Stay on the lesson until you turn in your code.")),
+    el("div",{class:"row"},ok)));
+  document.body.append(w);setTimeout(()=>ok.focus(),30)}
+function goneAway(){if(tracking()&&awayAt==null)awayAt=Date.now()}
+function cameBack(){if(awayAt==null)return;const d=Date.now()-awayAt;awayAt=null;if(tracking()&&d>=1000)secLog("l",Math.round(d/1000))}
+document.addEventListener("visibilitychange",()=>document.hidden?goneAway():cameBack());
+window.addEventListener("blur",goneAway);window.addEventListener("focus",cameBack);
+const noCopy=e=>{if(!secOn()||okSel()||okNode(e.target))return;e.preventDefault();toast(L("Copying is turned off during this lesson."))};
+document.addEventListener("copy",noCopy,true);document.addEventListener("cut",noCopy,true);
+document.addEventListener("paste",e=>{if(!secOn())return;const t=e.target&&(e.target.nodeType===1?e.target:e.target.parentElement);if(t&&t.closest&&t.closest(".item")){e.preventDefault();toast(L("Pasting is turned off for answers."))}},true);
+document.addEventListener("contextmenu",e=>{if(secOn()&&!okNode(e.target))e.preventDefault()},true);
+document.addEventListener("dragstart",e=>{if(!secOn())return;const t=e.target&&(e.target.nodeType===1?e.target:e.target.parentElement);if(!(t&&t.closest&&t.closest(".chip2")))e.preventDefault()},true);
+document.addEventListener("selectstart",e=>{if(secOn()&&!okNode(e.target))e.preventDefault()},true);
+function shotKey(e){return e.key==="PrintScreen"||((e.metaKey||e.ctrlKey)&&e.shiftKey&&["s","S","3","4","5"].includes(e.key))}
+document.addEventListener("keydown",e=>{if(!secOn())return;
+  if(shotKey(e)){if(tracking()&&e.key!=="PrintScreen"){e.preventDefault();secLog("s",0)}return}
+  if(!(e.ctrlKey||e.metaKey)||e.altKey)return;const k=(e.key||"").toLowerCase();
+  if(["p","s","u"].includes(k)){e.preventDefault();toast(L("Copying is turned off during this lesson."));return}
+  if((k==="a"&&!okNode(e.target))||(["c","x"].includes(k)&&!okNode(e.target)&&!okSel())){e.preventDefault();toast(L("Copying is turned off during this lesson."))}},true);
+document.addEventListener("keyup",e=>{if(secOn()&&e.key==="PrintScreen"&&tracking())secLog("s",0)},true);
+/* ---------- Desmos scientific calculator ---------- */
+const DESMOS_KEY="dcb31709b452b1cf9dc26972add0fda6";
+let calc=null,calcLoad=null,calcOpen=false;
+function loadDesmos(){if(window.Desmos)return Promise.resolve();if(calcLoad)return calcLoad;
+  calcLoad=new Promise((ok,no)=>{const s=document.createElement("script");s.src="https://www.desmos.com/api/v1.12/calculator.js?apiKey="+DESMOS_KEY;s.async=true;
+    s.onload=()=>window.Desmos?ok():no();s.onerror=()=>{calcLoad=null;s.remove();no()};document.head.append(s)});return calcLoad}
+function calcShow(on){let b=$("#calcBtn");
+  if(!on){b?.remove();calcToggle(false);return}
+  if(b){b.querySelector("span:last-child").textContent=L("Calculator");return}
+  b=el("button",{id:"calcBtn",type:"button","aria-expanded":"false","aria-controls":"calcPanel",onclick:()=>calcToggle(!calcOpen)},
+    el("span",{"aria-hidden":"true",html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2.5" width="14" height="19"/><rect x="8" y="5.5" width="8" height="4"/><path d="M8.5 13h1M12 13h0M15 13h.5M8.5 16.5h1M12 16.5h0M15 16.5h.5"/></svg>'}),el("span",{},L("Calculator")));
+  document.body.append(b)}
+function calcToggle(on){calcOpen=!!on;const b=$("#calcBtn");if(b)b.setAttribute("aria-expanded",on?"true":"false");
+  let p=$("#calcPanel");
+  if(!on){if(p)p.hidden=true;return}
+  if(!p){const host=el("div",{class:"host",id:"calcHost"},el("div",{class:"msg"},L("Loading the calculator…")));
+    const bar=el("div",{class:"bar",title:L("Drag the bar to move the calculator.")},el("b",{},L("Scientific calculator")),el("button",{type:"button","aria-label":L("Close calculator"),onclick:()=>calcToggle(false)},"✕"));
+    p=el("div",{id:"calcPanel",role:"dialog","aria-label":L("Scientific calculator")},bar,host);document.body.append(p);calcDrag(p,bar)}
+  p.hidden=false;
+  loadDesmos().then(()=>{const host=$("#calcHost");
+    if(!calc){host.innerHTML="";calc=Desmos.ScientificCalculator(host,{links:false,degreeMode:true,language:isES()?"es":"en",invertedColorsControl:false,brailleExpressionDownload:false})}
+    else calc.updateSettings({language:isES()?"es":"en"});
+    calc.resize&&calc.resize()})
+  .catch(()=>{const host=$("#calcHost");if(host)host.innerHTML="",host.append(el("div",{class:"msg"},L("The calculator could not load. Check your internet connection, or ask your teacher.")))})}
+function calcDrag(p,bar){let sx,sy,ox,oy,drag=false;
+  bar.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;drag=true;bar.setPointerCapture(e.pointerId);const r=p.getBoundingClientRect();sx=e.clientX;sy=e.clientY;ox=r.left;oy=r.top});
+  bar.addEventListener("pointermove",e=>{if(!drag)return;const w=p.offsetWidth,h=p.offsetHeight;
+    const x=Math.min(innerWidth-60,Math.max(60-w,ox+e.clientX-sx)),y=Math.min(innerHeight-40,Math.max(0,oy+e.clientY-sy));
+    Object.assign(p.style,{left:x+"px",top:y+"px",right:"auto",bottom:"auto"})});
+  bar.addEventListener("pointerup",()=>{drag=false;calc&&calc.resize&&calc.resize()})}
+function renderClosed(){calcShow(false);document.body.classList.toggle("secure",role==="student");$("#secWarn")?.remove();
+  const app=$("#app");app.className="wrap";app.innerHTML="";
+  $("#hdrWho").textContent=me.name+(me.period?" · "+me.period:"");$("#hdrWho").hidden=false;$("#hdrLang").hidden=false;applyChrome();startClock();
+  if(!me.code){makeCode().then(c=>{me.code=c;persistLocal();if(role==="student"&&me.submitted)renderClosed()});}
+  const code=me.code||"…";const box=el("div",{class:"code",id:"subcode"},code);
+  const copy=el("button",{class:"btn",onclick:async()=>{try{await navigator.clipboard.writeText(code);toast(L("Code copied"))}catch(e){const r=document.createRange();r.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(r);toast(L("Code selected. Press Ctrl+C."))}}},L("Copy code"));
+  const msg=el("span",{class:"hint","aria-live":"polite"});
+  const inp=el("input",{class:"txt",id:"roCode",autocomplete:"off",placeholder:"RO-… / UN… / NEW…",style:"width:180px"});
+  const go=()=>{if(tryReopen(inp.value))return;if(tryUnlock(inp.value))return;const r=tryClassCode(inp.value);if(r<=0)msg.textContent=teacherCodeMsg(r)};
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter")go()});
+  const att=me.attempt||1;let next;
+  if(att===1){next=el("div",{class:"panel",id:"nextAtt",style:"display:flex;flex-direction:column;gap:10px"});
+    const opens=attemptOpensAt(me.startedAt,me.mult,me.submittedAt);
+    const draw=(ask)=>{next.innerHTML="";clearInterval(nextAttInt);
+      if(Date.now()<opens){next.append(el("div",{class:"divider"},L("Need a second try?")),
+        el("p",{},L("Paste the code above in Google Classroom first. Your 2nd attempt opens when your attempt 1 time is over. Start it here, or later at home from the Next attempt tab. It is your last attempt: your answers clear and a new 51-minute timer starts.")),
+        el("p",{class:"notice",id:"att2Wait"},waitMsg(opens)),
+        el("div",{class:"row"},el("button",{class:"btn",id:"att2Btn",disabled:true},L("Start my 2nd attempt"))));
+        nextAttInt=setInterval(()=>{if(!document.body.contains(next)){clearInterval(nextAttInt);return}if(Date.now()>=opens)draw(false);else{const w=$("#att2Wait");if(w)w.textContent=waitMsg(opens)}},15000);return}
+      next.append(el("div",{class:"divider"},L("Need a second try?")),
+      el("p",{},L(ask?"Start attempt 2 now? Your attempt 1 answers clear on this page. Make sure you pasted your code in Google Classroom.":"Paste the code above in Google Classroom first. Then you may start your 2nd attempt now, or later at home from the Next attempt tab. It is your last attempt: your answers clear and a new 51-minute timer starts.")),
+      ask?el("div",{class:"row"},el("button",{class:"btn",id:"att2Yes",onclick:()=>startAttempt(2,me.mult)},L("Yes, start attempt 2")),el("button",{class:"btn ghost",onclick:()=>draw(false)},L("Cancel")))
+         :el("div",{class:"row"},el("button",{class:"btn",id:"att2Btn",onclick:()=>draw(true)},L("Start my 2nd attempt"))))};
+    draw(false);
+  }else next=el("div",{class:"notice",id:"nextAtt"},L("You have used your 2 attempts. For another attempt, ask your teacher for an unlock code and type it under Teacher code."));
+  app.append(el("section",{class:"sec",style:"max-width:620px"},
+    el("div",{class:"sec-h"},el("div",{class:"sqnum"},"✓"),el("div",{class:"t"},el("h2",{},L(me.autoSub?"Time is up":"Lesson submitted")),el("div",{class:"meta"},L("This lesson is closed")))),
+    el("div",{class:"divider"},L("Turn in your work")),
+    el("p",{},L("Your answers are locked. Paste this code where your teacher tells you (Google Classroom).")),
+    box,el("div",{class:"row"},copy),next,
+    el("details",{style:"border-top:1px dotted var(--line);padding-top:10px"},el("summary",{class:"hint"},L("Teacher code")),
+      el("div",{class:"row",style:"margin-top:8px"},inp,el("button",{class:"btn ghost sm",onclick:go},L("Reopen")),msg))));
+}
+function renderStudent(){calcShow(role==="student"||role==="preview");document.body.classList.toggle("secure",role==="student");
+  if(role==="student"&&me.submitted){renderClosed();return}
+  const app=$("#app");app.className="wrap";app.innerHTML="";
+  if(role==="preview")app.append(el("div",{class:"notice"},"Student preview (good for the projector). Nothing you enter here is saved. ",el("button",{class:"btn sm",style:"margin:0 8px",onclick:()=>setSession({step:Math.min(4,(session.step||0)+1)})},"Reveal next method"),el("button",{class:"linkish",onclick:()=>{role="teacher";startTeacher()}},"Back to the teacher console")));
+  app.append(el("div",{id:"status"}));
+  app.append(el("div",{class:"frame"},
+    el("div",{},el("div",{class:"lab"},L("Learning target")),el("p",{},L("I am learning to review and connect key voting-system concepts before the summative assessment."))),
+    el("div",{},el("div",{class:"lab"},L("Success criteria")),el("ul",{},el("li",{},L("I can define and distinguish voting terminology and preference ballots.")),el("li",{},L("I can apply plurality, majority, runoff, sequential runoff, preference, and approval voting to review examples."))))));
+  SECTIONS.forEach(s=>{
+    const box=el("section",{class:"sec",id:"sec"+s.n,"aria-labelledby":"h"+s.n});
+    const head=el("div",{class:"sec-h"},el("div",{class:"sqnum"},s.badge||s.n),el("div",{class:"t"},el("h2",{id:"h"+s.n},L(s.title),el("span",{class:"nowtag",hidden:true},L("Now"))),el("div",{class:"meta"},`${s.clock} · ${s.min} min`+L(s.mode==="submit"?" · one attempt":" · 2 attempts per question"))));
+    const lock=el("div",{class:"locked"},lockIcon(),el("span",{},L("Your teacher will open this section.")));
+    const body=el("div",{style:"display:flex;flex-direction:column;gap:16px"});
+    body.append(el("p",{class:"lead"},L(s.intro)));
+    s.blocks.forEach(b=>{
+      if(b.sched){body.append(schedTable(b.sched));if(b.note)body.append(el("p",{class:"hint"},L(b.note)))}
+      else if(b.approval)body.append(approvalTable());
+      else if(b.table)body.append(dataTable(b.table));
+      else if(b.talk)body.append(el("div",{class:"talk"},el("b",{},L("Talk It Over: ")),L(b.talk)));
+      else if(b.methods){const m=el("div",{id:"methods"});m.append(methodCards(b.methods,methodStep()));body.append(m)}
+      else if(b.div)body.append(el("div",{class:"divider"},L(b.div)));
+      else if(b.it)body.append(buildItem(b.it));
+    });
+    if(s===SECTIONS[SECTIONS.length-1])body.append(el("div",{id:"finish"}));
+    box.append(head,lock,body);
+    box._lock=lock;box._body=body;
+    app.append(box);
+  });
+  $("#hdrWho").textContent=me.name+(me.period?" · "+me.period:"");$("#hdrWho").hidden=false;$("#hdrLang").hidden=false;applyChrome();startClock();
+  onSession(true);renderStatus();renderFinish();
+}
+let localStep=0;
+function methodStep(){if(role==="preview")return session.step||0;return online?(session.step||0):localStep}
+function drawMethods(){const m=$("#methods");if(!m)return;m.innerHTML="";m.append(methodCards("trip",methodStep()));if(role==="student"&&!online&&localStep<4)m.append(el("div",{class:"row",style:"margin-top:10px"},el("button",{class:"btn",onclick:()=>{localStep++;drawMethods()}},L("Reveal next method"))))}
+function renderStatus(){
+  const s=$("#status");if(!s)return;s.innerHTML="";
+  if(role==="student"&&!me.submitted&&extOpen)s.append(extPanel());
+  if(role==="student"&&me.submitted){s.append(el("div",{class:"notice"},L(me.autoSub?"Time is up. Your answers are locked. Copy your code at the end of Section 4 and paste it in Google Classroom. ":"Submitted. Your answers are locked. Your code is at the end of Section 4. "),el("button",{class:"linkish",onclick:()=>$("#subcode")?.scrollIntoView({block:"center"})},L("Show my code"))));return}
+  if(role==="student"&&!online)s.append(el("div",{class:"notice"},L("Your answers are not reaching your teacher live from this account. Keep working: at the end of Section 4 you will get a submission code to turn in.")));
+}
+
+function buildItem(it){
+  const st=()=>me.answers[it.id];
+  const wrap=el("div",{class:"item",id:"it-"+it.id});
+  const body=el("div",{class:"body"});
+  const prompt=el("div",{class:"prompt"},L(it.prompt),it.dok?el("span",{class:"tag"},it.dok):null,it.challenge?el("span",{class:"tag red"},L("Challenge")):null,it.type==="poll"?el("span",{class:"tag"},L("Prediction")):null);
+  body.append(prompt);
+  const ctrl=el("div",{});const fb=el("div",{"aria-live":"polite"});
+  body.append(ctrl,fb);
+  wrap.append(el("div",{class:"qn"},it.code),body);
+  itemNodes[it.id]={wrap,ctrl,fb};
+  drawCtrl(it);
+  return wrap;
+}
+
+function setAnswer(it,v,{final=false}={}){
+  if(me.submitted&&role!=="preview")return;
+  const prev=me.answers[it.id]||{tries:0};
+  if(final&&(outOfTries(it,prev)||(it.mode==="check"&&prev.ok===true)))return;
+  const ok=grade(it,v);
+  const rec={v,at:Date.now(),tries:prev.tries,cv:prev.cv};
+  if(final){rec.cv=v;rec.tries=prev.tries+1;rec.ok=ok;rec.first=prev.tries===0?ok:prev.first;if(it.mode==="submit")rec.locked=true}
+  else{if(prev.ok!=null){rec.ok=prev.ok;rec.first=prev.first}}
+  me.answers[it.id]=rec;
+  queueWrite({answers:{[it.id]:rec}});
+}
+
+function drawCtrl(it){
+  const N=itemNodes[it.id];if(!N)return;const{ctrl}=N;ctrl.innerHTML="";
+  const a=me.answers[it.id];const frozen=!!me.submitted&&role!=="preview";const out=outOfTries(it,a);const locked=(a&&a.locked)||out||frozen;const done=it.mode==="check"&&a&&a.ok===true;
+  const showKey=it.mode==="check"?(a&&a.tries>0):(locked&&revealed(it.sec));
+  if(it.type==="choice"||it.type==="poll"){
+    let sel=a?a.v:null;
+    const opts=el("div",{class:"opts",role:"radiogroup"});
+    it.opts.forEach((o,i)=>{
+      let cls="opt"+(sel===i?" sel":"");
+      if(showKey&&it.type==="choice"&&sel===i)cls+=a.ok?" right":" wrong";
+      if(it.mode==="submit"&&a&&a.locked&&revealed(it.sec)&&i===it.key)cls+=" right";
+      if(out&&i===it.key)cls+=" right";
+      const b=el("button",{class:cls,role:"radio","aria-checked":sel===i?"true":"false",disabled:(locked||done||(it.type==="poll"&&a&&a.tries>0))?true:null,onclick:()=>{
+        if(it.type==="poll"){setAnswer(it,i,{final:true});drawCtrl(it);toast(L("Prediction recorded"));return}
+        sel=i;me.answers[it.id]={...(me.answers[it.id]||{tries:0}),v:i,draft:true};
+        opts.querySelectorAll(".opt").forEach((x,j)=>{x.classList.toggle("sel",j===i);x.classList.remove("right","wrong");x.setAttribute("aria-checked",j===i?"true":"false")});
+        btn.disabled=false;
+      }},el("span",{class:"box"}),el("span",{},L(o)));
+      opts.append(b);
+    });
+    ctrl.append(opts);
+    var btn;
+    if(it.type==="choice"&&!locked&&!done){btn=el("button",{class:"btn",disabled:sel==null?true:null,onclick:()=>{const v=me.answers[it.id]?.v;if(v==null)return;setAnswer(it,v,{final:true});drawCtrl(it)}},L(it.mode==="submit"?"Lock in":"Check"));ctrl.append(el("div",{class:"row",style:"margin-top:8px"},btn))}
+  }
+  else if(it.type==="num"||it.type==="set"){
+    const fields=it.type==="num"?[["_","Answer",it.key]]:it.fields;
+    const row=el("div",{class:"fields"});
+    const inputs={};
+    fields.forEach(([k,label])=>{
+      const val=it.type==="num"?(a?.v??""):(a?.v?.[k]??"");
+      const inp=el("input",{class:"num",inputmode:"numeric",id:`in-${it.id}-${k}`,value:val,disabled:(locked||done)?true:null,"aria-label":L(label)});
+      if(showKey&&a){const right=it.type==="num"?a.ok:Number(a.v?.[k])===fields.find(f=>f[0]===k)[2];if(it.mode==="check"||revealed(it.sec))inp.classList.add(right?"right":"wrong")}
+      inp.addEventListener("keydown",e=>{if(e.key==="Enter")go()});
+      inputs[k]=inp;
+      row.append(it.type==="num"?inp:el("label",{class:"field",for:inp.id},el("span",{},L(label)),inp));
+    });
+    const go=()=>{let v;if(it.type==="num"){v=inputs._.value.trim();if(v==="")return}else{v={};let any=false;for(const k in inputs){v[k]=inputs[k].value.trim();if(v[k]!=="")any=true}if(!any)return}setAnswer(it,v,{final:true});drawCtrl(it)};
+    ctrl.append(el("div",{class:"row"},row,(!locked&&!done)?el("button",{class:"btn",onclick:go,style:"align-self:flex-end"},L(it.mode==="submit"?"Lock in":"Check")):null));
+  }
+  else if(it.type==="drag"||it.type==="fix"){
+    const isFix=it.type==="fix",S=dragInit(it,a),off=!!(locked||done);
+    const cur=()=>isFix?((S.seg==null||S.slots[0]==null)?null:S.seg+"."+S.slots[0]):(S.slots.some(x=>x==null)?null:S.slots.join("."));
+    const checked=a&&a.tries>0?String(a.cv!==undefined?a.cv:a.v):null;
+    const marks=checked!=null&&cur()===checked&&a.ok!==true?true:(a&&a.ok===true);
+    const kp=String(it.key).split(".").map(Number);
+    const place=(k,i)=>{if(off)return;S.slots[k]=i;S.pick=null;drawCtrl(it)};
+    const slot=k=>{const val=S.slots[k];let cls="slot"+(val==null?" empty":"");
+      if(marks&&val!=null)cls+=(val===(isFix?kp[1]:kp[k]))?" right":" wrong";
+      const b=el("button",{class:cls,type:"button",disabled:off?true:null,"aria-label":L("Drop zone"),onclick:()=>{if(off)return;if(S.pick!=null)place(k,S.pick);else if(val!=null){S.slots[k]=null;drawCtrl(it)}}},val==null?L("Drop here"):L(it.chips[val]));
+      b.addEventListener("dragover",e=>{if(!off){e.preventDefault();b.classList.add("over")}});
+      b.addEventListener("dragleave",()=>b.classList.remove("over"));
+      b.addEventListener("drop",e=>{e.preventDefault();b.classList.remove("over");const i=parseInt(e.dataTransfer.getData("text/plain"),10);if(!isNaN(i))place(k,i)});
+      return b};
+    let area;
+    if(isFix){let j=-1;
+      const stmt=el("div",{class:"stmt"},it.parts.map(([isSeg,t])=>{if(!isSeg)return L(t);j++;const idx=j;let c="seg"+(S.seg===idx?" sel":"");if(marks&&S.seg===idx)c+=idx===kp[0]?" right":" wrong";
+        return el("button",{class:c,type:"button",disabled:off?true:null,"aria-pressed":S.seg===idx?"true":"false",onclick:()=>{S.seg=idx;drawCtrl(it)}},L(t))}));
+      area=el("div",{style:"display:flex;flex-direction:column;gap:10px"},stmt,el("div",{class:"row"},el("b",{},L("Fix:")),slot(0)));
+    }else if(it.rows){
+      area=el("div",{style:"display:flex;flex-direction:column;gap:8px"},it.rows.map((r,k)=>el("div",{class:"mrow"},el("span",{style:"font-weight:600"},L(r)),slot(k))));
+    }else{const parts=L(it.text).split("___");area=el("div",{class:"dz-text"},parts.flatMap((p,k)=>k<parts.length-1?[p,slot(k)]:[p]));}
+    const kids=[];
+    if(!off)kids.push(el("p",{class:"hint"},L(isFix?"Click the part that is wrong, then drag the correct words into the Fix box. You can also tap a card, then tap the box.":"Drag a card into each box, or tap a card and then tap a box. Tap a filled box to clear it.")));
+    kids.push(area);
+    if(!off){kids.push(el("div",{class:"bank"},it.chips.map((c,i)=>{const ch=el("button",{class:"chip2"+(S.pick===i?" sel":""),type:"button",draggable:"true","aria-pressed":S.pick===i?"true":"false",onclick:()=>{S.pick=S.pick===i?null:i;drawCtrl(it)}},L(c));
+        ch.addEventListener("dragstart",e=>{e.dataTransfer.setData("text/plain",String(i));e.dataTransfer.effectAllowed="copy"});return ch})));
+      kids.push(el("div",{class:"row",style:"margin-top:8px"},el("button",{class:"btn",disabled:cur()==null?true:null,onclick:()=>{const v=cur();if(v==null)return;setAnswer(it,v,{final:true});drawCtrl(it)}},L("Check"))));}
+    ctrl.append(...kids);
+  }
+  else if(it.type==="text"){
+    const ta=el("textarea",{id:"ta-"+it.id,"aria-label":L("Your response"),disabled:frozen?true:null});ta.value=a?.v||"";
+    const status=el("span",{class:"hint"});
+    let t;ta.addEventListener("input",()=>{status.textContent=L("Saving…");clearTimeout(t);t=setTimeout(()=>{setAnswer(it,ta.value);status.textContent=L(online?"Saved":"Saved on this page")},900)});
+    ctrl.append(ta,el("div",{class:"row",style:"margin-top:6px"},status));
+    if(it.rubric)ctrl.append(el("details",{},el("summary",{class:"hint"},isES()?`Cómo se califica (${it.points} puntos)`:`How this is scored (${it.points} points)`),el("table",{class:"rubric"},it.rubric.map(([p,d])=>el("tr",{},el("td",{},p),el("td",{},L(d)))))));
+  }
+  else if(it.type==="rate"){
+    const opts=el("div",{class:"row"});
+    RATE_OPTS.forEach(([k,l])=>opts.append(el("button",{class:"btn ghost"+(a?.v===k?" on":""),"aria-pressed":a?.v===k?"true":"false",disabled:frozen?true:null,onclick:()=>{setAnswer(it,k,{final:true});drawCtrl(it)}},L(l))));
+    ctrl.append(opts);
+  }
+  drawFb(it);
+}
+function drawFb(it){
+  const N=itemNodes[it.id];if(!N)return;const{fb}=N;fb.innerHTML="";
+  const a=me.answers[it.id];
+  if(it.hint&&it.mode==="check"&&!(a&&a.ok)&&!outOfTries(it,a)&&!(me.submitted&&role!=="preview")){
+    const hb=el("button",{class:"linkish"},L("Show a hint"));const ht=el("p",{class:"hint",hidden:true},L(it.hint));
+    hb.onclick=()=>{ht.hidden=!ht.hidden};fb.append(el("div",{},hb,ht));
+  }
+  if(!a||a.tries===0&&it.type!=="text"){return}
+  if(it.type==="text"){const g=me.grades[it.id];if(g!=null)fb.append(el("div",{class:"tscore"},(isES()?"Calificación del maestro: ":"Teacher score: ")+`${g} / ${it.points}`));return}
+  if(it.type==="poll"){fb.append(el("div",{class:"fb"},L("Prediction locked in. Keep it in mind as we count.")));return}
+  if(it.type==="rate"){fb.append(el("div",{class:"fb"},L("Thanks. Your teacher sees this rating.")));return}
+  if(it.mode==="check"){
+    if(a.ok)fb.append(el("div",{class:"fb ok"},L(a.first?"Correct on the first try.":"Correct. Nice fix.")));
+    else if(outOfTries(it,a))fb.append(el("div",{class:"fb no"},L("No attempts left. The correct answer is ")+keyText(it)+"."));
+    if(it.why&&(a.ok||outOfTries(it,a)))fb.append(el("div",{class:"why"},el("b",{},L("Why: ")),L(it.why)));
+    else fb.append(el("div",{class:"fb no"},L("Not yet. You have 1 attempt left.")+L(it.hint?" Try the hint.":" Recheck your work.")));
+  }else{
+    if(!revealed(it.sec))fb.append(el("div",{class:"fb wait"},L("Locked in. Results appear when your teacher releases them.")));
+    else fb.append(el("div",{class:"fb "+(a.ok?"ok":"no")},a.ok?L("Correct."):L("Incorrect. The correct answer is highlighted.")+(it.type==="set"?L(" Correct totals: ")+it.fields.map(f=>L(f[1])+" "+f[2]).join(", ")+".":"")));
+  }
+}
+function refreshItem(it){drawCtrl(it)}
+const dstate={};
+function dragInit(it,a){if(dstate[it.id])return dstate[it.id];
+  const n=it.type==="fix"?1:(it.rows?it.rows.length:it.text.split("___").length-1);
+  const st={slots:Array(n).fill(null),seg:null,pick:null};
+  const v=a&&(a.cv!==undefined?a.cv:a.v);
+  if(v!=null&&v!==""){const p=String(v).split(".").map(x=>x==="-"?null:Number(x));if(it.type==="fix"){st.seg=p[0];st.slots=[p[1]]}else st.slots=p.slice(0,n)}
+  return dstate[it.id]=st}
+function keyText(it){if(it.type==="num")return String(it.key);if(it.type==="drag"){const k=String(it.key).split(".").map(Number);return k.map((x,i)=>(it.rows?L(it.rows[i])+": ":"")+"“"+L(it.chips[x])+"”").join(", ")}if(it.type==="fix"){const k=String(it.key).split(".").map(Number);const sg=it.parts.filter(q=>q[0]).map(q=>q[1]);return "“"+L(sg[k[0]])+"” → “"+L(it.chips[k[1]])+"”"}if(it.type==="choice")return "“"+L(it.opts[it.key])+"”";if(it.type==="set")return it.fields.map(f=>L(f[1])+" "+f[2]).join(", ");return ""}
+
+let confirmSubmit=false;
+function renderFinish(){
+  const f=$("#finish");if(!f)return;f.innerHTML="";
+  const answered=ITEMS.filter(i=>me.answers[i.id]&&(me.answers[i.id].tries>0||i.type==="text"&&me.answers[i.id].v)).length;
+  if(online){f.append(el("div",{class:"fb ok"},isES()?`Tu trabajo se guarda para tu maestro mientras avanzas. ${answered} de ${ITEMS.length} preguntas respondidas.`:`Your work saves to your teacher as you go. ${answered} of ${ITEMS.length} items answered.`));return}
+  if(me.submitted&&me.code&&role!=="preview"){
+    const code=me.code;const box=el("div",{class:"code",id:"subcode"},code);
+    const copy=el("button",{class:"btn ghost sm",onclick:async()=>{try{await navigator.clipboard.writeText(code);toast(L("Code copied"))}catch(e){const r=document.createRange();r.selectNodeContents(box);const s=getSelection();s.removeAllRanges();s.addRange(r);toast(L("Code selected. Press Ctrl+C."))}}},L("Copy code"));
+    f.append(el("div",{class:"divider"},L("Turn in your work")),el("p",{},L("Your answers are locked. Paste this code where your teacher tells you (Google Classroom).")),box,copy);
+    return;
+  }
+  if(confirmSubmit){
+    f.append(el("div",{class:"confirm"},L("Getting your code locks every answer in this lesson. You cannot change anything after this."),
+      el("button",{class:"btn sm",onclick:()=>finalize(false)},L("Lock and get my code")),
+      el("button",{class:"btn ghost sm",onclick:()=>{confirmSubmit=false;renderFinish()}},L("Keep working"))));
+    return;
+  }
+  f.append(el("p",{class:"hint"},isES()?`${answered} de ${ITEMS.length} preguntas respondidas.`:`${answered} of ${ITEMS.length} items answered.`),el("button",{class:"btn",onclick:()=>{confirmSubmit=true;renderFinish()}},L("Get my submission code")));
+}
+/* ---------- submission codes: compact + compressed ---------- */
+const SEP="\u001f";
+const RATE_SHORT={met:"m",near:"n",need:"x"},RATE_LONG={m:"met",n:"near",x:"need"};
+const b64u=bytes=>{let s="";for(let i=0;i<bytes.length;i+=8192)s+=String.fromCharCode.apply(null,bytes.subarray(i,i+8192));return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"")};
+const unb64u=str=>{const s=atob(str.replace(/-/g,"+").replace(/_/g,"/"));const b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b};
+const sum36=str=>{let h=0;for(const ch of str)h=(h*31+ch.charCodeAt(0))>>>0;return h.toString(36).slice(-4)};
+async function zip(bytes){if(!window.CompressionStream)return null;try{return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new CompressionStream("deflate-raw"))).arrayBuffer())}catch(e){return null}}
+async function unzip(bytes){return new Uint8Array(await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer())}
+const clean=x=>String(x??"").replace(/[\u001f]/g," ");
+function packCode(){
+  const em=String(me.email||"");const local=em.endsWith(EMAIL_DOMAIN)?em.slice(0,-EMAIL_DOMAIN.length):em;
+  const head=["2",clean(me.name),clean(local),clean(me.period),lang==="es"?"e":"n",me.attempt||1,(me.startedAt||0).toString(36),(me.submittedAt||Date.now()).toString(36),me.mult||1,me.autoSub?1:0,me.reopens||0];
+  const ans=ITEMS.map(it=>{const a=me.answers[it.id];if(!a)return"";
+    if(it.type==="text")return a.v?"0"+clean(a.v):"";
+    if(!(a.tries>0))return"";
+    const v=a.cv!==undefined?a.cv:a.v;if(v==null)return"";
+    const t=Math.min(9,a.tries||1);
+    if(it.type==="set")return t+it.fields.map(f=>clean(v?.[f[0]]).replace(/,/g,"")).join(",");
+    if(it.type==="rate")return t+(RATE_SHORT[v]||"");
+    return t+clean(v)});
+  return head.concat(ans,[secPack()]).join(SEP);
+}
+function secPack(){const L=me.leaves||[];const n=L.filter(x=>x.k==="l").length,s=L.filter(x=>x.k==="s").length,secs=L.reduce((a,x)=>a+(x.d||0),0);
+  return n+"."+secs+"."+s+(L.length?"|"+L.slice(0,15).map(x=>Math.max(0,Math.round(x.t/60000))+":"+(x.k==="s"?"s":x.d)).join(","):"")}
+function secRead(x){if(!x)return null;const[a,b]=String(x).split("|");const[n,secs,s]=a.split(".").map(Number);
+  return{n:n||0,secs:secs||0,s:s||0,list:b?b.split(",").map(p=>{const[t,d]=p.split(":");return[+t,d==="s"?"s":+d]}):[]}}
+async function makeCode(){
+  const raw=new TextEncoder().encode(packCode());const z=await zip(raw);
+  const body=(z&&z.length<raw.length)?"Z"+b64u(z):"P"+b64u(raw);
+  return "VR1."+body+"."+sum36(body);
+}
+async function readCode(code){
+  const c=String(code).trim();
+  
+  const m=c.match(/^VR1\.([ZP])([A-Za-z0-9_-]+)\.([a-z0-9]{1,4})$/);if(!m)return null;
+  if(sum36(m[1]+m[2])!==m[3])return null;
+  try{
+    let bytes=unb64u(m[2]);if(m[1]==="Z")bytes=await unzip(bytes);
+    const f=new TextDecoder().decode(bytes).split(SEP);if(f[0]!=="2"||(f.length!==11+ITEMS.length&&f.length!==12+ITEMS.length))return null;
+    const answers={};
+    ITEMS.forEach((it,i)=>{const x=f[11+i];if(!x)return;const t=+x[0];let v=x.slice(1);
+      if(it.type==="choice"||it.type==="poll")v=Number(v);
+      else if(it.type==="set"){const parts=v.split(",");v={};it.fields.forEach((fl,j)=>v[fl[0]]=parts[j]??"")}
+      else if(it.type==="rate")v=RATE_LONG[v]||v;
+      const ok=grade(it,v);answers[it.id]={v,tries:it.type==="text"?0:t,ok,first:ok===true&&t===1}});
+    const local=f[2];
+    return{name:f[1],email:local?(local.includes("@")?local:local+EMAIL_DOMAIN):"",attempt:+f[5]||1,period:f[3],lang:f[4]==="e"?"es":"en",
+      tm:{s:parseInt(f[6],36)||null,e:parseInt(f[7],36),x:+f[8]||1,au:+f[9]||0,r:+f[10]||0},sec:secRead(f[11+ITEMS.length]),answers,at:parseInt(f[7],36),grades:{}};
+  }catch(e){return null}
+}
+function readCodeV1(code){
+  const m=String(code).trim().match(/^WRW1\.([A-Za-z0-9+/=]+)\.([a-z0-9]+)$/);if(!m)return null;
+  let h=0;for(const ch of m[1])h=(h*31+ch.charCodeAt(0))>>>0;if(h.toString(36)!==m[2])return null;
+  try{const d=JSON.parse(decodeURIComponent(escape(atob(m[1]))));const answers={};
+    for(const[k,[v,tries,first]]of Object.entries(d.a||{})){const it=ITEM[k];if(!it)continue;answers[k]={v,tries,first:!!first,ok:grade(it,v)}}
+    return{name:d.n,email:d.em||"",attempt:d.at||1,period:d.p,lang:d.l||"en",tm:d.tm||null,answers,at:d.t,grades:{}}}catch(e){return null}
+}
+
+let lastFocus=null;
+function onSession(initial){
+  $("#pause").hidden=!(role==="student"&&online&&session.paused);
+  renderTimer();
+  if(role==="teacher"){scheduleTeacher();return}
+  if(role!=="student"&&role!=="preview")return;
+  SECTIONS.forEach(s=>{const box=$("#sec"+s.n);if(!box)return;const open=isOpen(s.n);box._lock.hidden=open;box._body.hidden=!open;
+    const now=online&&session.focus===s.n;box.classList.toggle("now",now);box.querySelector(".nowtag").hidden=!now});
+  drawMethods();
+  ITEMS.filter(i=>i.mode==="submit"&&me.answers[i.id]?.locked).forEach(refreshItem);
+  if(online&&session.focus!==lastFocus){lastFocus=session.focus;if(!initial){const b=$("#sec"+session.focus);b&&b.scrollIntoView({behavior:matchMedia("(prefers-reduced-motion:reduce)").matches?"auto":"smooth",block:"start"})}}
+}
+let timerInt=null;
+function renderTimer(){
+  const t=$("#hdrTimer");clearInterval(timerInt);
+  if(!session.timerEnd){t.hidden=true;return}
+  const tick=()=>{const ms=session.timerEnd-Date.now();if(ms<=0){t.textContent="Time";t.classList.add("low");return}const s=Math.ceil(ms/1000);t.textContent=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");t.classList.toggle("low",s<=30)};
+  t.hidden=false;tick();timerInt=setInterval(tick,1000);
+}
+
+/* ============================== TEACHER ============================== */
+let subs={},imported={},tTab="teach",periodFilter="all",openStudent=null,gradeItem=TEXT[0]?.id,teacherStarted=false,confirmClear=false;
+function startTeacher(){
+  $("#hdrWho").textContent="Teacher console";$("#hdrWho").hidden=false;
+  if(db&&!teacherStarted){
+    teacherStarted=true;
+    db.collection("subs").onSnapshot(s=>{subs={};s.docs.forEach(d=>{if(d.exists)subs[d.id]={...d.data(),_id:d.id,_src:"live"}});scheduleTeacher()},err=>toast("Live responses paused: "+err.code));
+    db.collection("imported").onSnapshot(s=>{imported={};s.docs.forEach(d=>{if(d.exists)imported[d.id]={...d.data(),_id:d.id,_src:"code"}});scheduleTeacher()},()=>{});
+  }
+  renderTeacher();
+}
+let tRaf=null;function scheduleTeacher(){if(role!=="teacher")return;clearTimeout(tRaf);tRaf=setTimeout(renderTeacher,250)}
+let attemptView="latest";
+const whoKey=x=>x.email||normName(x.name)+"|"+(x.period||"");
+function roster(){
+  let all=Object.values({...subs,...imported});
+  const counts={};all.forEach(x=>{const k=whoKey(x)+"#"+(x.attempt||1);counts[k]=(counts[k]||0)+1});
+  all.forEach(x=>{x._dup=counts[whoKey(x)+"#"+(x.attempt||1)]>1});
+  if(attemptView==="latest"){const top={};all.forEach(x=>{const k=whoKey(x);top[k]=Math.max(top[k]||1,x.attempt||1)});all=all.filter(x=>(x.attempt||1)===top[whoKey(x)])}
+  return all.filter(s=>periodFilter==="all"||s.period===periodFilter).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+}
+async function setSession(patch){
+  session={...session,...patch};onSession();
+  try{await db.doc(SESSION_PATH).set({open:session.open,focus:session.focus,step:session.step,reveal:session.reveal,paused:session.paused,timerEnd:session.timerEnd})}catch(e){toast("Could not update students: "+(e.code||"error"))}
+}
+function itemStats(it,list){
+  let n=0,ok=0,first=0;const dist={};
+  list.forEach(s=>{const a=s.answers?.[it.id];if(!a||a.v==null||(a.tries||0)===0&&it.type!=="text")return;n++;if(a.ok)ok++;if(a.first)first++;if(it.type==="choice"||it.type==="poll"||it.type==="rate")dist[a.v]=(dist[a.v]||0)+1});
+  return{n,ok,first,dist};
+}
+function studentScore(s){
+  const by={};let auto=0,autoMax=0;
+  SECTIONS.forEach(sec=>by[sec.n]={ok:0,n:0});
+  AUTO.forEach(it=>{if(it.challenge)return;autoMax++;by[it.sec].n++;if(s.answers?.[it.id]?.ok){auto++;by[it.sec].ok++}});
+  let w=0,wMax=0,wGraded=0;TEXT.forEach(it=>{wMax+=it.points;const g=s.grades?.[it.id];if(g!=null){w+=g;wGraded++}});
+  const answered=ITEMS.filter(i=>{const a=s.answers?.[i.id];return a&&(a.tries>0||(i.type==="text"&&a.v))}).length;
+  return{by,auto,autoMax,w,wMax,wGraded,answered,pct:Math.round(100*(auto+w)/(autoMax+wMax))};
+}
+function mark(a){if(!a||a.v==null||(a.tries||0)===0)return el("span",{class:"mark"},"–");if(a.ok&&a.first)return el("span",{class:"mark ok",title:"Correct first try"},"✓");if(a.ok)return el("span",{class:"mark fix",title:"Correct after a retry"},"◐");return el("span",{class:"mark no",title:"Not correct"},"✗")}
+function fmtAns(it,a){if(!a||a.v==null)return"—";if(it.type==="drag")return String(a.v).split(".").map((x,k)=>(it.rows?it.rows[k]+": ":"")+(x==="-"?"—":it.chips[+x])).join(" | ");if(it.type==="fix"){const p=String(a.v).split(".");const sg=it.parts.filter(q=>q[0]).map(q=>q[1]);return "“"+(sg[+p[0]]??"?")+"” → “"+(it.chips[+p[1]]??"?")+"”"}if(it.type==="choice"||it.type==="poll")return it.opts[a.v]??"—";if(it.type==="set")return it.fields.map(f=>f[1]+" "+(a.v?.[f[0]]??"—")).join(", ");if(it.type==="rate")return(RATE_OPTS.find(r=>r[0]===a.v)||[,"—"])[1];return String(a.v)}
+
+function secText(x){return x?x.list.map(([t,d])=>d==="s"?`${t} min: screenshot key`:`${t} min: away ${d}s`).join("\n"):""}
+function secCell(s){const x=s.sec;if(!x)return el("td",{class:"c hint"},"—");
+  const lab=x.n+(x.s?` · ${x.s} SS`:"");const bad=x.n>=3||x.s>0;
+  return el("td",{class:"c tabnum",title:(x.n||x.s)?`Away ${x.secs}s in all\n`+secText(x):"Stayed on the page"},bad?el("span",{class:"pill need"},lab):lab)}
+function renderTeacher(){calcShow(false);document.body.classList.remove("secure");$("#secWarn")?.remove();
+  if(role!=="teacher")return;
+  const app=$("#app");app.className="wrap wide";
+  const keepScroll=window.scrollY;const keepCodes=$("#codesIn")?.value;
+  app.innerHTML="";
+  const list=roster();
+  const periods=[...new Set(Object.values({...subs,...imported}).map(s=>s.period).filter(Boolean))].sort();
+  const tabs=el("div",{class:"tabs",role:"tablist"},[["teach","Teach"],["book","Gradebook"],["write","Score writing"],["codes","Submission codes"],["reopen","Reopen"]].filter(t=>(db||t[0]!=="teach")&&(t[0]!=="write"||TEXT.length)).map(([k,l])=>el("button",{role:"tab","aria-selected":tTab===k?"true":"false",onclick:()=>{tTab=k;renderTeacher()}},l)));
+  const filt=el("div",{class:"row"},el("label",{for:"pf",class:"hint"},"Class period"),el("select",{id:"pf",style:"width:auto",onchange:e=>{periodFilter=e.target.value;renderTeacher()}},el("option",{value:"all"},"All periods"),periods.map(p=>el("option",{value:p,selected:periodFilter===p},p))),
+    el("select",{id:"af",style:"width:auto","aria-label":"Attempts shown",onchange:e=>{attemptView=e.target.value;renderTeacher()}},el("option",{value:"latest",selected:attemptView==="latest"},"Latest attempt"),el("option",{value:"all",selected:attemptView==="all"},"All attempts")),
+    el("button",{class:"btn ghost sm",onclick:()=>{role="preview";renderStudent()}},"Student preview"),
+    db?null:el("button",{class:"btn sm",onclick:lockTeacher},"Lock scoreboard"));
+  app.append(el("div",{class:"row",style:"justify-content:space-between"},tabs,filt));
+  if(tTab==="teach")app.append(teachTab(list));
+  if(tTab==="book")app.append(bookTab(list));
+  if(tTab==="write")app.append(writeTab(list));
+  if(tTab==="codes")app.append(codesTab());
+  if(tTab==="reopen")app.append(reopenTab());
+  if(keepCodes&&$("#codesIn"))$("#codesIn").value=keepCodes;
+  window.scrollTo(0,keepScroll);
+}
+
+function teachTab(list){
+  const open=session.open||[];
+  const ctl=el("div",{class:"panel"},el("h3",{},"Lesson control"),
+    el("p",{class:"hint"},"Open sections for students and choose which one is live now. Students' screens jump to the live section."),
+    SECTIONS.map(s=>el("div",{class:"secrow"},
+      el("span",{class:"n"},s.badge||s.n),
+      el("span",{class:"nm"},s.title.replace("Lesson Focus: ","Focus: "),el("small",{},s.clock)),
+      el("button",{class:"btn sm "+(open.includes(s.n)?"on":"ghost"),"aria-pressed":open.includes(s.n)?"true":"false",onclick:()=>setSession({open:open.includes(s.n)?open.filter(x=>x!==s.n):[...open,s.n].sort()})},open.includes(s.n)?"Open":"Locked"),
+      el("button",{class:"btn sm "+(session.focus===s.n?"on":"ghost"),onclick:()=>setSession({focus:s.n,open:open.includes(s.n)?open:[...open,s.n].sort()})},session.focus===s.n?"Live":"Go")
+    )),
+    el("div",{class:"row"},el("button",{class:"btn ghost sm",onclick:()=>setSession({open:[1,2,3,4,5,6]})},"Open all"),el("button",{class:"btn ghost sm",onclick:()=>setSession({open:[session.focus]})},"Only live section")),
+    el("h3",{},"Section 2 method reveal"),
+    el("div",{class:"row"},el("span",{class:"tabnum"},`${session.step||0} of 4 shown`),el("button",{class:"btn sm",disabled:(session.step||0)>=4?true:null,onclick:()=>setSession({step:Math.min(4,(session.step||0)+1)})},"Reveal next method"),el("button",{class:"btn ghost sm",onclick:()=>setSession({step:0})},"Hide all")),
+    el("h3",{},"Release results"),
+    el("div",{class:"row"},[5,6].map(n=>el("button",{class:"btn sm "+(session.reveal?.[n]?"on":"ghost"),onclick:()=>setSession({reveal:{...session.reveal,[n]:!session.reveal?.[n]}})},(session.reveal?.[n]?"Hide":"Show")+(n===5?" Section 5":" exit ticket")))),
+    el("h3",{},"Timer"),
+    el("div",{class:"row"},[3,5,8,10].map(m=>el("button",{class:"btn ghost sm",onclick:()=>setSession({timerEnd:Date.now()+m*60000})},m+" min")),el("button",{class:"btn ghost sm",onclick:()=>setSession({timerEnd:null})},"Stop")),
+    el("h3",{},"Attention"),
+    el("button",{class:"btn "+(session.paused?"on":""),onclick:()=>setSession({paused:!session.paused})},session.paused?"Release screens":"Eyes up: pause screens")
+  );
+  const sec=SECTIONS.find(s=>s.n===session.focus)||SECTIONS[0];
+  const items=ITEMS.filter(i=>i.sec===sec.n);
+  const joined=list.length;
+  const inSec=list.filter(s=>items.some(i=>s.answers?.[i.id]?.tries>0||(i.type==="text"&&s.answers?.[i.id]?.v))).length;
+  const autos=items.filter(i=>AUTO_TYPES.includes(i.type));
+  let okSum=0,nSum=0,firstSum=0;autos.forEach(i=>{const st=itemStats(i,list);okSum+=st.ok;nSum+=st.n;firstSum+=st.first});
+  const flagged=list.filter(s=>["r1","r2"].some(r=>s.answers?.[r]?.v==="need")).length;
+  const live=el("div",{class:"panel"},
+    el("h3",{},`Live: Section ${sec.n} · ${sec.title}`),
+    el("div",{class:"stats"},
+      el("div",{class:"stat"},el("div",{class:"v"},joined),el("div",{class:"k"},"Students joined")),
+      el("div",{class:"stat"},el("div",{class:"v"},inSec),el("div",{class:"k"},"Working in this section")),
+      el("div",{class:"stat"},el("div",{class:"v"},nSum?Math.round(100*firstSum/nSum)+"%":"–"),el("div",{class:"k"},"Correct first try")),
+      el("div",{class:"stat"},el("div",{class:"v"},flagged),el("div",{class:"k"},"Rated “Need More”"))),
+    joined===0?el("div",{class:"empty"},"No students yet. Share this page with your class and set general access to Contributor; responses appear here as students join. Students who can't save live will turn in a submission code."):null,
+    el("div",{class:"ia"},items.map(it=>{
+      const st=itemStats(it,list);
+      const row=el("div",{class:"iarow"},el("div",{class:"qn"},it.code),el("div",{class:"p"},it.prompt.length>110?it.prompt.slice(0,108)+"…":it.prompt));
+      const right=el("div",{});
+      if(AUTO_TYPES.includes(it.type)){
+        const pf=st.n?Math.round(100*st.first/st.n):0,pc=st.n?Math.round(100*st.ok/st.n):0;
+        right.append(el("div",{class:"bar first",title:"Correct on first try"},el("i",{style:`width:${pf}%`})),el("div",{class:"pct"+(st.n&&pf<60?" low":"")},`${pf}% first · ${pc}% now · n=${st.n}`));
+      }else if(it.type==="text"){right.append(el("div",{class:"pct"},`${st.n} written`),el("button",{class:"linkish",onclick:()=>{tTab="write";gradeItem=it.id;renderTeacher()}},"Score these"))}
+      else right.append(el("div",{class:"pct"},`n=${st.n}`));
+      row.append(right);
+      const wrap=el("div",{},row);
+      if((it.type==="choice"||it.type==="poll"||it.type==="rate")&&st.n){
+        const opts=it.type==="rate"?RATE_OPTS.map(r=>r[1]):it.opts;const keys=it.type==="rate"?RATE_OPTS.map(r=>r[0]):opts.map((_,i)=>i);
+        wrap.append(el("div",{class:"dist",style:"padding-left:62px"},keys.map((k,i)=>{const c=st.dist[k]||0;return el("div",{class:"d"+(it.key===k?" k":"")},el("span",{},opts[i]+(it.key===k?" ✓":"")),el("div",{class:"bar"},el("i",{style:`width:${st.n?100*c/st.n:0}%`})),el("span",{class:"tabnum"},c))})));
+      }
+      return wrap;
+    }))
+  );
+  return el("div",{class:"console"},ctl,live);
+}
+
+function bookTab(list){
+  const out=el("div",{style:"display:flex;flex-direction:column;gap:14px"});
+  out.append(el("div",{class:"row"},
+    el("button",{class:"btn",onclick:exportCSV},"Download gradebook (CSV)"),
+    el("span",{class:"hint"},"Try = attempt number. Duplicate = same email started twice in one attempt. Time = minutes used / time limit; ×1.5 or ×2 = extended time. ✓ first try · ◐ correct on 2nd try · ✗ not correct after 2 tries · – no answer."),
+  ));
+  if(!list.length){out.append(el("div",{class:"empty"},"The gradebook fills in as students join."));return out}
+  const secs=SECTIONS.filter(s=>s.n!==2||true);
+  const tbl=el("table",{class:"gb"},
+    el("tr",{},el("th",{},"Student"),el("th",{},"Per."),el("th",{class:"c"},"Try"),el("th",{},"Answered"),el("th",{},"Time"),SECTIONS.map(s=>el("th",{class:"c"},(s.badge?"WU":"S"+s.n))),el("th",{class:"c"},"Writing"),el("th",{class:"c"},"Total"),el("th",{},"Self-rating"),el("th",{class:"c",title:"Times the student left the lesson page (other tab, window or app). SS = screenshot keys pressed."},"Left page"),el("th",{},"Source")),
+    list.map(s=>{const sc=studentScore(s);const rates=["r1","r2"].map(r=>s.answers?.[r]?.v).filter(Boolean);
+      return el("tr",{class:"click",tabindex:"0",onclick:()=>{openStudent=s._id;renderTeacher()},onkeydown:e=>{if(e.key==="Enter"){openStudent=s._id;renderTeacher()}}},
+        el("td",{},el("b",{},s.name||"(no name)"),s._dup?el("span",{class:"pill need",style:"margin-left:6px",title:"This email submitted more than once in the same attempt (likely a second device or Incognito)."},"Duplicate"):null,s.email?el("div",{class:"hint",style:"font-size:.78rem"},s.email):null),el("td",{},s.period||""),el("td",{class:"c tabnum"},s.attempt||1),el("td",{class:"tabnum"},`${sc.answered}/${ITEMS.length}`),el("td",{class:"tabnum"},fmtUsed(s.tm)),
+        SECTIONS.map(sec=>el("td",{class:"c tabnum"},sc.by[sec.n].n?`${sc.by[sec.n].ok}/${sc.by[sec.n].n}`:"")),
+        el("td",{class:"c tabnum"},`${sc.w}/${sc.wMax}`+(sc.wGraded<TEXT.length?"*":"")),
+        el("td",{class:"c tabnum"},el("b",{},sc.pct+"%")),
+        el("td",{},rates.map(r=>el("span",{class:"pill "+r,style:"margin-right:4px"},(RATE_OPTS.find(x=>x[0]===r)||[])[1]))),
+        secCell(s),
+        el("td",{class:"hint"},(s._src==="code"?"Code":"Live")+(s.lang==="es"?" · Español":"")))}));
+  out.append(el("div",{class:"tbl-wrap"},tbl),el("p",{class:"hint"},"* Some writing not scored yet. Select a student for item-by-item detail."));
+  const s=list.find(x=>x._id===openStudent);
+  if(s){
+    const d=el("div",{class:"drawer"},el("div",{class:"row",style:"justify-content:space-between"},el("h3",{},s.name+" · "+(s.period||"")+(s.sec&&(s.sec.n||s.sec.s)?` · left page ${s.sec.n}×, ${s.sec.secs}s away`+(s.sec.s?`, ${s.sec.s} screenshot key`:""):"")),el("button",{class:"btn ghost sm",onclick:()=>{openStudent=null;renderTeacher()}},"Close")));
+    SECTIONS.forEach(sec=>{
+      d.append(el("div",{class:"divider"},`Section ${sec.n}: ${sec.title}`));
+      ITEMS.filter(i=>i.sec===sec.n).forEach(it=>{const a=s.answers?.[it.id];
+        d.append(el("div",{class:"row",style:"align-items:flex-start;gap:10px"},el("div",{class:"qn"},it.code),el("div",{style:"flex:1;min-width:0"},
+          el("div",{class:"hint"},it.prompt),
+          el("div",{},AUTO_TYPES.includes(it.type)?mark(a):null," ",fmtAns(it,a),a&&a.tries>1?el("span",{class:"hint"},` (${a.tries} tries)`):null),
+          it.type==="text"?scoreButtons(s,it):null)))});
+    });
+    out.append(d);
+  }
+  return out;
+}
+function scoreButtons(s,it){
+  const cur=s.grades?.[it.id];
+  return el("div",{class:"scorebtns"},el("span",{class:"hint",style:"margin-right:4px"},"Score:"),Array.from({length:it.points+1},(_,p)=>el("button",{class:"btn sm "+(cur===p?"on":"ghost"),"aria-pressed":cur===p?"true":"false",onclick:async()=>{
+    const path=(s._src==="code"?"imported/":"subs/")+s._id;
+    s.grades={...(s.grades||{}),[it.id]:p};scheduleTeacher();
+    if(!db){saveLocalImported();return}
+    try{await db.doc(path).update({grades:{[it.id]:p}})}catch(e){toast("Score not saved: "+(e.code||"error"))}
+  }},p)));
+}
+
+function writeTab(list){
+  const it=ITEM[gradeItem];
+  const out=el("div",{style:"display:flex;flex-direction:column;gap:14px"});
+  out.append(el("div",{class:"row"},TEXT.map(t=>el("button",{class:"btn sm "+(t.id===gradeItem?"on":"ghost"),onclick:()=>{gradeItem=t.id;renderTeacher()}},t.code+` (${t.points} pts)`))));
+  out.append(el("div",{class:"panel"},el("div",{class:"prompt"},it.code+" · "+it.prompt),el("table",{class:"rubric"},it.rubric.map(([p,d])=>el("tr",{},el("td",{},p),el("td",{},d))))));
+  const rs=list.filter(s=>s.answers?.[it.id]?.v);
+  if(!rs.length){out.append(el("div",{class:"empty"},"No written responses yet for "+it.code+"."));return out}
+  out.append(el("p",{class:"hint"},`${rs.filter(s=>s.grades?.[it.id]!=null).length} of ${rs.length} scored. Scores appear on the student's screen.`));
+  out.append(el("div",{class:"grade"},rs.map(s=>el("div",{class:"resp"},el("div",{class:"who"},s.name+" · "+(s.period||"")),el("div",{class:"txt"},s.answers[it.id].v),scoreButtons(s,it)))));
+  return out;
+}
+
+function codesTab(){
+  const out=el("div",{class:"panel",style:"max-width:760px"},
+    el("h3",{},"Add submission codes"),
+    el("p",{},"Paste the codes students turned in on Google Classroom, one per line. They are scored with the answer key and added to the gradebook."),
+    el("textarea",{id:"codesIn",placeholder:"VR1.Z…"}),
+    el("div",{class:"row"},el("button",{class:"btn",onclick:addCodes},"Add to gradebook"),el("span",{id:"codesMsg",class:"hint","aria-live":"polite"})),
+    el("p",{class:"hint"},"To let students back in, use the Reopen tab."),
+    el("h3",{},"Start fresh"),
+    el("p",{class:"hint"},db?"Clear responses before a new class period if you prefer one gradebook per period. Download the CSV first.":"Codes and scores are kept in this browser on this computer. Download the CSV before clearing."),
+    confirmClear?el("div",{class:"confirm"},"Delete every response and imported code? This cannot be undone.",el("button",{class:"btn sm",onclick:clearAll},"Delete all"),el("button",{class:"btn ghost sm",onclick:()=>{confirmClear=false;renderTeacher()}},"Cancel"))
+      :el("button",{class:"btn ghost",onclick:()=>{confirmClear=true;renderTeacher()}},"Clear all responses")
+  );
+  return out;
+}
+async function addCodes(){
+  const lines=$("#codesIn").value.split(/\s+/).filter(Boolean);let ok=0,bad=0;
+  for(const c of lines){const d=await readCode(c);if(!d){bad++;continue}
+    let h=0;for(const ch of c)h=(h*33+ch.charCodeAt(0))>>>0;const id="c"+h.toString(36);
+    if(!db){
+      const who=x=>x.email||normName(x.name)+"|"+x.period;const same=Object.values(imported).filter(x=>who(x)===who(d)&&(x.attempt||1)===(d.attempt||1)&&x.tm&&d.tm&&x.tm.s===d.tm.s);
+      if(same.some(x=>(x.tm.e||0)>(d.tm.e||0))){ok++;continue}
+      same.forEach(x=>delete imported[x._id]);
+      imported[id]={...d,_id:id,_src:"code"};ok++;continue}
+    try{await db.doc("imported/"+id).set(d);ok++}catch(e){bad++}}
+  if(!db){saveLocalImported();renderTeacher();$("#codesMsg")&&($("#codesMsg").textContent=`${ok} added${bad?`, ${bad} not readable (check that the whole code was copied)`:""}.`);return}
+  $("#codesMsg").textContent=`${ok} added${bad?`, ${bad} not readable (check that the whole code was copied)`:""}.`;
+  if(ok)$("#codesIn").value="";
+}
+async function clearAll(){
+  confirmClear=false;
+  if(!db){imported={};saveLocalImported();toast("Cleared");renderTeacher();return}
+  const all=[...Object.keys(subs).map(id=>"subs/"+id),...Object.keys(imported).map(id=>"imported/"+id)];
+  for(const p of all){try{await db.doc(p).delete()}catch(e){}}
+  toast(`Cleared ${all.length} records`);renderTeacher();
+}
+async function exportCSV(){
+  const list=roster();
+  const head=["Name","Email","Attempt","Duplicate","Period","Source","Answered","Minutes used","Time limit (min)","Extended time","Ran out of time","Reopened","Auto correct","Auto max","Writing","Writing max","Total %",...SECTIONS.map(s=>(s.badge?"WU":"S"+s.n)),...ITEMS.map(i=>i.code+(i.type==="text"?" response":"")),...TEXT.map(t=>t.code+" score"),"Left page","Seconds away","Screenshot keys","Leave log (minutes into lesson)"];
+  const rows=list.map(s=>{const sc=studentScore(s);const tm=s.tm||{};return[s.name,s.email||"",s.attempt||1,s._dup?"Yes":"",s.period,(s._src==="code"?"Code":"Live")+(s.lang==="es"?" (Spanish)":""),sc.answered,tm.s?Math.round((tm.e-tm.s)/60000):"",tm.s?Math.round(LESSON_MIN*(tm.x||1)):"",tm.x>1?"x"+tm.x:"",tm.au?"Yes":(tm.s?"No":""),tm.r?tm.r:"",sc.auto,sc.autoMax,sc.w,sc.wMax,sc.pct,...SECTIONS.map(x=>sc.by[x.n].n?`${sc.by[x.n].ok}/${sc.by[x.n].n}`:""),
+    ...ITEMS.map(i=>{const a=s.answers?.[i.id];if(!a||a.v==null)return"";const t=fmtAns(i,a);return AUTO_TYPES.includes(i.type)?(a.ok?(a.first?"✓ ":"◐ "):"✗ ")+t:t}),...TEXT.map(t=>s.grades?.[t.id]??""),s.sec?s.sec.n:"",s.sec?s.sec.secs:"",s.sec?s.sec.s:"",secText(s.sec).replace(/\n/g,"; ")]});
+  const csv="﻿"+[head,...rows].map(r=>r.map(v=>{const x=String(v??"");return /[",\n]/.test(x)?'"'+x.replace(/"/g,'""')+'"':x}).join(",")).join("\r\n");
+  if(downloads){try{await downloads.save({filename:"voting-systems-review-10-28.csv",data:new Blob([csv],{type:"text/csv"})});return}catch(e){if(e&&e.code==="declined")return}}
+  if(!window.claude){try{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download="voting-systems-review-10-28.csv";document.body.append(a);a.click();a.remove();return}catch(e){}}
+  try{await navigator.clipboard.writeText(csv);toast("CSV copied. Paste it into Google Sheets.")}catch(e){toast("Download unavailable here.")}
+}
+
+/* ---------- teacher scoring on this computer (no live connection) ---------- */
+function saveLocalImported(){const o={};for(const[k,v]of Object.entries(imported)){const{_id,_src,_dup,...rest}=v;o[k]=rest}ls.set(IMP_KEY,o)}
+const PIN_HASH="c7424abb";let pinFails=0,pinBlockedUntil=0;
+function pinHash(x){let h=0x811c9dc5;const salt="wrw-10-26|";for(let r=0;r<20000;r++){const t=salt+x+r;for(let i=0;i<t.length;i++){h^=t.charCodeAt(i);h=Math.imul(h,16777619)>>>0}}return h.toString(16)}
+function tryPin(){
+  const msg=$("#tPinMsg"),inp=$("#tPin");if(!inp)return;
+  if(Date.now()<pinBlockedUntil){msg.textContent="Too many tries. Wait a minute.";return}
+  if(pinHash(inp.value.trim())===PIN_HASH){pinFails=0;inp.value="";startTeacherLocal();return}
+  pinFails++;inp.value="";
+  if(pinFails>=3){pinBlockedUntil=Date.now()+60000;pinFails=0;msg.textContent="Too many tries. Wait a minute."}else msg.textContent="Incorrect PIN.";
+}
+function fmtUsed(tm){if(!tm||!tm.s)return "";const used=Math.round((tm.e-tm.s)/60000);return `${used} / ${Math.round(LESSON_MIN*(tm.x||1))} min`+(tm.x>1?` · ×${tm.x}`:"")+(tm.au?" · out of time":"")+(tm.r?` · reopened${tm.r>1?" ×"+tm.r:""}`:"")}
+function reopenTool(){
+  const list=Object.values(imported).filter(x=>x.tm&&x.tm.e&&x.name).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  if(!list.length)return el("div",{class:"empty"},"Add a student's submission code in the Submission codes tab first. Their name appears here.");
+  const out=el("div",{class:"code",style:"font-size:1.4rem;font-weight:700;letter-spacing:.06em",id:"roOut"},"—");
+  const sel=el("select",{id:"roStu",style:"width:auto"},el("option",{value:""},"Choose a student…"),list.map(x=>el("option",{value:x._id},`${x.name} · ${x.period||""}`+(x.email?` · ${x.email}`:"")+((x.attempt||1)>1?` · attempt ${x.attempt}`:""))));
+  let mins=20;
+  const btns=el("div",{class:"row"},[10,15,20,30,51].map(m=>el("button",{class:"btn sm "+(m===mins?"on":"ghost"),"data-m":m,onclick:e=>{mins=m;btns.querySelectorAll("button").forEach(b=>b.classList.toggle("on",+b.dataset.m===m));btns.querySelectorAll("button").forEach(b=>b.classList.toggle("ghost",+b.dataset.m!==m));upd()}},`+${m} min`)));
+  const upd=()=>{const x=imported[sel.value];out.textContent=x?reopenCode(x.email||x.name,x.tm.e,mins):"—"};
+  sel.addEventListener("change",upd);
+  return el("div",{style:"display:flex;flex-direction:column;gap:8px"},el("div",{class:"row"},sel),btns,out);
+}
+function reopenTab(){
+  return el("div",{style:"display:flex;flex-direction:column;gap:18px;max-width:760px"},
+    el("div",{class:"panel"},
+      el("h3",{},"Reopen one student"),
+      el("p",{class:"hint"},"Lets one student back into their own lesson with their answers kept. Add their submission code in the Submission codes tab first, then pick them here, choose the extra minutes, and give them the code. It works only for that student's email, and only until they submit again."),
+      reopenTool()),
+    el("div",{class:"panel"},
+      el("h3",{},"Unlock another attempt for one student"),
+      el("p",{class:"hint"},"Students start a 2nd attempt on their own (on the locked screen, or from the Next attempt tab at home). For a 3rd attempt or later, add the student's latest submission code in the Submission codes tab, pick them here and give them this code. It works only for that student's email."),
+      unlockTool()),
+    el("div",{class:"panel"},
+      el("h3",{},"Fresh attempt for the whole class"),
+      el("p",{class:"hint"},"Restarts the lesson for everyone: answers clear and a new 51-minute timer starts (extended time is kept). Write the code on the board. Students enter it under Teacher code on their locked screen, or by clicking their timer if they are still working. Each student can use it once."),
+      classTool()),
+    el("div",{class:"panel"},
+      el("h3",{},"Clear student sessions on this computer"),
+      el("p",{class:"hint"},"Use after testing as a student on this computer, so the next person starts fresh. This does not touch your gradebook."),
+      el("button",{class:"btn ghost",onclick:()=>{resetMe();me.name="";me.period="";me.email="";try{localStorage.removeItem(SESS_KEY);localStorage.removeItem(LAST_KEY)}catch(e){};toast("Student sessions cleared on this computer")}},"Clear student sessions")));
+}
+function unlockTool(){
+  const top={};Object.values(imported).forEach(x=>{if(!x.email)return;const k=normEmail(x.email);if(!top[k]||(x.attempt||1)>(top[k].attempt||1))top[k]=x});
+  const list=Object.values(top).sort((a,b)=>String(a.name).localeCompare(String(b.name)));
+  if(!list.length)return el("div",{class:"empty"},"Add a student's submission code in the Submission codes tab first. Their name appears here.");
+  const out=el("div",{class:"code",style:"font-size:1.4rem;font-weight:700;letter-spacing:.06em",id:"unOut"},"—");
+  const lab=el("div",{class:"hint"},"");
+  const sel=el("select",{id:"unStu",style:"width:auto"},el("option",{value:""},"Choose a student…"),list.map(x=>el("option",{value:normEmail(x.email)},`${x.name} · ${x.period||""} · ${x.email} · last attempt ${x.attempt||1}`)));
+  sel.addEventListener("change",()=>{const x=top[sel.value];if(!x){out.textContent="—";lab.textContent="";return}const n=(x.attempt||1)+1;
+    out.textContent=n<=2?"Not needed":unlockCode(x.email,n);lab.textContent=n<=2?"This student can start attempt 2 on their own.":`Unlocks attempt ${n} for ${x.email}`});
+  return el("div",{style:"display:flex;flex-direction:column;gap:8px"},el("div",{class:"row"},sel),lab,out);
+}
+function classTool(){
+  const maxAt=Math.max(1,...Object.values(imported).map(x=>x.attempt||1));
+  let n=Math.min(9,maxAt+1);
+  const out=el("div",{class:"code",style:"font-size:1.6rem;font-weight:700;letter-spacing:.08em",id:"classOut"},classCode(n));
+  const lab=el("div",{class:"hint"},`Attempt ${n}`);
+  const btns=el("div",{class:"row"},[2,3,4,5].map(k=>el("button",{class:"btn sm "+(k===n?"on":"ghost"),"data-k":k,onclick:()=>{n=k;out.textContent=classCode(k);lab.textContent=`Attempt ${k}`;btns.querySelectorAll("button").forEach(b=>{b.classList.toggle("on",+b.dataset.k===k);b.classList.toggle("ghost",+b.dataset.k!==k)})}},`Attempt ${k}`)));
+  return el("div",{style:"display:flex;flex-direction:column;gap:8px"},btns,lab,out,el("p",{class:"hint"},maxAt>1?`The newest attempt in your gradebook is ${maxAt}.`:"Students start on attempt 1. Use attempt 2 for the first class-wide restart."));
+}
+function lockTeacher(){role="loading";tTab="teach";openStudent=null;$("#hdrWho").hidden=true;renderJoin()}
+function startTeacherLocal(){role="teacher";const o=ls.get(IMP_KEY)||{};imported={};for(const[k,v]of Object.entries(o))imported[k]={...v,_id:k,_src:"code"};tTab="codes";startTeacher()}
+/* ============================== BOOT ============================== */
+$("#hdrLang").addEventListener("click",()=>setLang(isES()?"en":"es"));
+$("#hdrClock").addEventListener("click",()=>{if(role!=="student"||me.submitted)return;extOpen=!extOpen;renderStatus();if(extOpen){window.scrollTo({top:0});$("#extCode")?.focus()}});
+renderJoin();
+capP.then(()=>{if(role==="loading"&&!db){/* no runtime: offline student mode on join */}});
+</script>
+
+</body>
+</html>
